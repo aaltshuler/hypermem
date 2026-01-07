@@ -7,7 +7,7 @@ import {
   type AddMemParams,
 } from '../db/client.js';
 import { MemInputSchema } from '../types/schemas.js';
-import type { Mem, MemType, MemState, Confidence, MemStatus } from '../types/index.js';
+import type { Mem, MemType, MemState, Confidence, MemStatus, ActorType } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 export interface WritePipelineInput {
@@ -19,6 +19,7 @@ export interface WritePipelineInput {
   title?: string;
   tags?: string[];
   notes?: string;
+  actors?: ActorType[];
 }
 
 export interface WritePipelineResult {
@@ -73,6 +74,7 @@ export async function writePipeline(
     title: input.title,
     tags: input.tags,
     notes: input.notes,
+    actors: input.actors,
   });
 
   // Generate embedding from statement + notes
@@ -94,6 +96,7 @@ export async function writePipeline(
     tags: validated.tags,
     notes: validated.notes,
     created_at: now,
+    actors: validated.actors,
   };
 
   const mem = await addMem(client, memParams);

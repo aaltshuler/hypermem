@@ -9,7 +9,7 @@ import { deleteCommand } from './commands/delete.js';
 import { objectCommand } from './commands/object.js';
 import { linkCommand } from './commands/link.js';
 import { contextCommand } from './commands/context.js';
-import { actorCommand } from './commands/actor.js';
+import { agentCommand } from './commands/agent.js';
 
 const program = new Command();
 
@@ -27,7 +27,7 @@ program.addCommand(deleteCommand);
 // Entity commands
 program.addCommand(objectCommand);
 program.addCommand(contextCommand);
-program.addCommand(actorCommand);
+program.addCommand(agentCommand);
 
 // Edge commands
 program.addCommand(linkCommand);

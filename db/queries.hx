@@ -17,7 +17,8 @@ QUERY addMem(
     notes: String,
     valid_from: String,
     valid_to: String,
-    created_at: String
+    created_at: String,
+    actors: String
 ) =>
     mem <- AddN<Mem>({
         mem_type: mem_type,
@@ -31,7 +32,8 @@ QUERY addMem(
         valid_from: valid_from,
         valid_to: valid_to,
         last_validated_at: created_at,
-        created_at: created_at
+        created_at: created_at,
+        actors: actors
     })
     RETURN mem
 
@@ -110,26 +112,32 @@ QUERY getAllContexts() =>
     RETURN ctxs
 
 // ============================================
-// ACTOR CRUD
+// AGENT CRUD
 // ============================================
 
-QUERY addActor(
-    actor_type: String,
-    name: String
+QUERY addAgent(
+    name: String,
+    model: String,
+    function: String
 ) =>
-    actor <- AddN<Actor>({
-        actor_type: actor_type,
-        name: name
+    agent <- AddN<Agent>({
+        name: name,
+        model: model,
+        function: function
     })
-    RETURN actor
+    RETURN agent
 
-QUERY getActor(id: ID) =>
-    actor <- N<Actor>(id)
-    RETURN actor
+QUERY getAgent(id: ID) =>
+    agent <- N<Agent>(id)
+    RETURN agent
 
-QUERY getAllActors() =>
-    actors <- N<Actor>
-    RETURN actors
+QUERY getAgentByName(name: String) =>
+    agent <- N<Agent>({name: name})
+    RETURN agent
+
+QUERY getAllAgents() =>
+    agents <- N<Agent>
+    RETURN agents
 
 // ============================================
 // TRACE CRUD
@@ -207,8 +215,12 @@ QUERY linkInContext(memId: ID, contextId: ID) =>
     edge <- AddE<InContext>::From(memId)::To(contextId)
     RETURN edge
 
-QUERY linkProposedBy(memId: ID, actorId: ID) =>
-    edge <- AddE<ProposedBy>::From(memId)::To(actorId)
+QUERY linkProposedByAgent(memId: ID, agentId: ID) =>
+    edge <- AddE<ProposedByAgent>::From(memId)::To(agentId)
+    RETURN edge
+
+QUERY linkVersionOf(memId: ID, objectId: ID) =>
+    edge <- AddE<VersionOf>::From(memId)::To(objectId)
     RETURN edge
 
 // ============================================
@@ -313,10 +325,10 @@ QUERY getMemContexts(memId: ID) =>
     ctxs <- mem::Out<InContext>
     RETURN ctxs
 
-QUERY getMemActor(memId: ID) =>
+QUERY getMemAgents(memId: ID) =>
     mem <- N<Mem>(memId)
-    actors <- mem::Out<ProposedBy>
-    RETURN actors
+    agents <- mem::Out<ProposedByAgent>
+    RETURN agents
 
 QUERY getMemEvidence(memId: ID) =>
     mem <- N<Mem>(memId)
@@ -357,3 +369,8 @@ QUERY getRelatedMems(memId: ID) =>
     mem <- N<Mem>(memId)
     related <- mem::Out<Related>
     RETURN related
+
+QUERY getObjectVersions(objectId: ID) =>
+    obj <- N<Object>(objectId)
+    versions <- obj::In<VersionOf>
+    RETURN versions

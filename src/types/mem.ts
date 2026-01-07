@@ -9,13 +9,16 @@ export type MemType =
   | 'AntiPattern'
   | 'Trait'
   | 'Preference'
-  | 'Causal';
+  | 'Causal'
+  | 'Version';
 
 export type MemState = 'FACT' | 'ASSUMPTION';
 
 export type Confidence = 'low' | 'med' | 'high';
 
 export type MemStatus = 'ACTIVE' | 'SUPERSEDED' | 'CONTESTED' | 'ARCHIVED';
+
+export type ActorType = 'human' | 'agent';
 
 export interface Mem {
   id: string;
@@ -31,6 +34,7 @@ export interface Mem {
   valid_to?: string;
   last_validated_at?: string;
   created_at: string;
+  actors?: ActorType[]; // Who contributed: human, agent, or both
 }
 
 // Input type for creating a new Mem
@@ -45,4 +49,5 @@ export interface MemInput {
   notes?: string;
   valid_from?: string;
   valid_to?: string;
+  actors?: ActorType[];
 }

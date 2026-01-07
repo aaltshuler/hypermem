@@ -19,7 +19,15 @@ N::Mem {
     valid_from: String,
     valid_to: String,
     last_validated_at: String,
-    created_at: String
+    created_at: String,
+    actors: String
+}
+
+// AGENT - AI agent instances
+N::Agent {
+    INDEX name: String,
+    model: String,
+    function: String
 }
 
 // OBJECT - Things memories are about
@@ -35,12 +43,6 @@ N::Context {
     INDEX context_type: String,
     INDEX name: String,
     description: String
-}
-
-// ACTOR - Who created/proposed
-N::Actor {
-    INDEX actor_type: String,
-    INDEX name: String
 }
 
 // TRACE - Internal records (sessions, events, snapshots)
@@ -68,7 +70,8 @@ N::Reference {
 // Mem relationships to entities
 E::About { From: Mem, To: Object, Properties: {} }
 E::InContext { From: Mem, To: Context, Properties: {} }
-E::ProposedBy { From: Mem, To: Actor, Properties: {} }
+E::ProposedByAgent { From: Mem, To: Agent, Properties: {} }
+E::VersionOf { From: Mem, To: Object, Properties: {} }
 
 // Mem evidence links
 E::HasEvidence { From: Mem, To: Trace, Properties: {} }

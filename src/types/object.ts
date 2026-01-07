@@ -1,14 +1,18 @@
 // OBJECT - Things memories are about
 
 export type ObjectType =
-  | 'Tool'
+  | 'Language'
+  | 'Database'
+  | 'Framework'
   | 'Lib'
-  | 'Stack'
-  | 'Template'
+  | 'Tool'
   | 'API'
   | 'Model'
   | 'Component'
-  | 'Service';
+  | 'Service'
+  | 'Font'
+  | 'Stack'
+  | 'Template';
 
 export interface ObjectEntity {
   id: string;

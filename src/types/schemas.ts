@@ -14,6 +14,7 @@ export const MemTypeEnum = z.enum([
   'Trait',
   'Preference',
   'Causal',
+  'Version',
 ]);
 
 export const MemStateEnum = z.enum(['FACT', 'ASSUMPTION']);
@@ -28,19 +29,23 @@ export const MemStatusEnum = z.enum([
 ]);
 
 export const ObjectTypeEnum = z.enum([
-  'Tool',
+  'Language',
+  'Database',
+  'Framework',
   'Lib',
-  'Stack',
-  'Template',
+  'Tool',
   'API',
   'Model',
   'Component',
   'Service',
+  'Font',
+  'Stack',
+  'Template',
 ]);
 
 export const ContextTypeEnum = z.enum(['Org', 'Project']);
 
-export const ActorTypeEnum = z.enum(['Person', 'Agent']);
+export const ActorTypeEnum = z.enum(['human', 'agent']);
 
 export const TraceTypeEnum = z.enum([
   'SessionLog',
@@ -75,6 +80,7 @@ export const MemInputSchema = z
     notes: z.string().max(4000).optional(),
     valid_from: z.string().optional(),
     valid_to: z.string().optional(),
+    actors: z.array(ActorTypeEnum).optional(),
   })
   .refine(
     (data) => {
@@ -117,15 +123,16 @@ export const ContextInputSchema = z.object({
 export type ContextInputType = z.infer<typeof ContextInputSchema>;
 
 // ============================================
-// ACTOR SCHEMAS
+// AGENT SCHEMAS
 // ============================================
 
-export const ActorInputSchema = z.object({
-  actor_type: ActorTypeEnum,
+export const AgentInputSchema = z.object({
   name: z.string().min(1).max(200),
+  model: z.string().min(1).max(200),
+  function: z.string().max(500).optional(),
 });
 
-export type ActorInputType = z.infer<typeof ActorInputSchema>;
+export type AgentInputType = z.infer<typeof AgentInputSchema>;
 
 // ============================================
 // TRACE SCHEMAS
@@ -194,9 +201,9 @@ export const LinkInContextSchema = z.object({
   contextId: z.string().uuid(),
 });
 
-export const LinkProposedBySchema = z.object({
+export const LinkProposedByAgentSchema = z.object({
   memId: z.string().uuid(),
-  actorId: z.string().uuid(),
+  agentId: z.string().uuid(),
 });
 
 export const LinkSupersedesSchema = z.object({

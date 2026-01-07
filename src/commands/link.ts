@@ -3,7 +3,8 @@ import {
   getHelixClient,
   linkAbout,
   linkInContext,
-  linkProposedBy,
+  linkProposedByAgent,
+  linkVersionOf,
   linkSupersedes,
   linkContradicts,
   linkDependsOn,
@@ -51,14 +52,31 @@ linkCommand
 
 linkCommand
   .command('proposedby')
-  .description('Link a MEM to an ACTOR (who proposed it)')
+  .description('Link a MEM to an AGENT (who proposed it)')
   .argument('<memId>', 'Memory ID')
-  .argument('<actorId>', 'Actor ID')
-  .action(async (memId: string, actorId: string) => {
+  .argument('<agentId>', 'Agent ID')
+  .action(async (memId: string, agentId: string) => {
     try {
       const client = getHelixClient();
-      await linkProposedBy(client, memId, actorId);
-      console.log(`Linked MEM ${memId} -> PROPOSED_BY -> Actor ${actorId}`);
+      await linkProposedByAgent(client, memId, agentId);
+      console.log(`Linked MEM ${memId} -> PROPOSED_BY -> Agent ${agentId}`);
+    } catch (error) {
+      logger.error(error, 'Failed to create link');
+      console.error('Error:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+linkCommand
+  .command('versionof')
+  .description('Link a Version MEM to a Model OBJECT')
+  .argument('<memId>', 'Version memory ID')
+  .argument('<objectId>', 'Model object ID')
+  .action(async (memId: string, objectId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkVersionOf(client, memId, objectId);
+      console.log(`Linked MEM ${memId} -> VERSION_OF -> Object ${objectId}`);
     } catch (error) {
       logger.error(error, 'Failed to create link');
       console.error('Error:', error instanceof Error ? error.message : error);

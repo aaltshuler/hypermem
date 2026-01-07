@@ -1,20 +1,24 @@
 import { Command } from 'commander';
 import { writePipeline } from '../pipelines/write.js';
-import type { MemType, MemState, Confidence } from '../types/index.js';
+import type { MemType, MemState, Confidence, ActorType } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 export const addCommand = new Command('add')
   .description('Add a new memory (MEM)')
   .argument('<statement>', 'Memory statement to store')
-  .option('-t, --type <type>', 'MEM type (Decision|Problem|Rule|BestPractice|Convention|AntiPattern|Trait|Preference|Causal)')
+  .option('-t, --type <type>', 'MEM type (Decision|Problem|Rule|BestPractice|Convention|AntiPattern|Trait|Preference|Causal|Version)')
   .option('-s, --state <state>', 'MEM state (FACT|ASSUMPTION)', 'FACT')
   .option('-c, --confidence <confidence>', 'Confidence level (low|med|high) - required if ASSUMPTION')
+  .option('-a, --actors <actors>', 'Who contributed (comma-separated: human,agent)')
   .option('--title <title>', 'Short title for the memory')
   .option('--tags <tags>', 'Comma-separated tags')
   .option('--notes <notes>', 'Additional notes')
   .action(async (statement: string, options) => {
     try {
       const tags = options.tags ? options.tags.split(',').map((t: string) => t.trim()) : undefined;
+      const actors = options.actors
+        ? options.actors.split(',').map((a: string) => a.trim() as ActorType)
+        : undefined;
 
       const result = await writePipeline({
         statement,
@@ -24,6 +28,7 @@ export const addCommand = new Command('add')
         title: options.title,
         tags,
         notes: options.notes,
+        actors,
       });
 
       if (result.skipped) {
@@ -38,6 +43,7 @@ export const addCommand = new Command('add')
       console.log(`  ${mem.statement.slice(0, 80)}${mem.statement.length > 80 ? '...' : ''}`);
       if (mem.title) console.log(`  title: ${mem.title}`);
       if (mem.tags && mem.tags.length > 0) console.log(`  tags: ${mem.tags.join(', ')}`);
+      if (mem.actors && mem.actors.length > 0) console.log(`  actors: ${mem.actors.join(', ')}`);
       console.log(`  status: ${mem.status}`);
     } catch (error) {
       logger.error(error, 'Failed to add memory');

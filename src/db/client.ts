@@ -5,12 +5,12 @@ import type {
   MemState,
   Confidence,
   MemStatus,
+  ActorType,
   ObjectEntity,
   ObjectType,
   Context,
   ContextType,
-  Actor,
-  ActorType,
+  Agent,
   Trace,
   TraceType,
   Reference,
@@ -55,6 +55,7 @@ export interface AddMemParams {
   valid_from?: string;
   valid_to?: string;
   created_at: string;
+  actors?: ActorType[];
 }
 
 export async function addMem(
@@ -73,12 +74,16 @@ export async function addMem(
     valid_from: params.valid_from || '',
     valid_to: params.valid_to || '',
     created_at: params.created_at,
+    actors: JSON.stringify(params.actors || []),
   });
   const data = (result as { mem?: Mem }).mem;
   if (!data) throw new Error('Failed to add mem');
-  // Parse tags back to array
+  // Parse tags and actors back to arrays
   if (typeof data.tags === 'string') {
     data.tags = data.tags ? JSON.parse(data.tags) : [];
+  }
+  if (typeof data.actors === 'string') {
+    data.actors = data.actors ? JSON.parse(data.actors) : [];
   }
   return data;
 }
@@ -93,6 +98,9 @@ export async function getMem(
   if (typeof data.tags === 'string') {
     data.tags = data.tags ? JSON.parse(data.tags) : [];
   }
+  if (typeof data.actors === 'string') {
+    data.actors = data.actors ? JSON.parse(data.actors) : [];
+  }
   return data;
 }
 
@@ -103,6 +111,7 @@ export async function getAllMems(client: HelixDBClient): Promise<Mem[]> {
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
+    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -116,6 +125,7 @@ export async function getMemsByType(
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
+    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -129,6 +139,7 @@ export async function getMemsByStatus(
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
+    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -166,6 +177,7 @@ export async function updateMemStatus(
     valid_from: existing.valid_from,
     valid_to: existing.valid_to,
     created_at: existing.created_at,
+    actors: existing.actors,
   });
 }
 
@@ -289,54 +301,49 @@ export async function deleteContext(
 }
 
 // ============================================
-// ACTOR OPERATIONS
+// AGENT OPERATIONS
 // ============================================
 
-export interface AddActorParams {
-  actor_type: ActorType;
+export interface AddAgentParams {
   name: string;
+  model: string;
+  function?: string;
 }
 
-export async function addActor(
+export async function addAgent(
   client: HelixDBClient,
-  params: AddActorParams
-): Promise<Actor> {
-  const result = await client.query('addActor', {
-    actor_type: params.actor_type,
+  params: AddAgentParams
+): Promise<Agent> {
+  const result = await client.query('addAgent', {
     name: params.name,
+    model: params.model,
+    function: params.function || '',
   });
-  const data = (result as { actor?: Actor }).actor;
-  if (!data) throw new Error('Failed to add actor');
+  const data = (result as { agent?: Agent }).agent;
+  if (!data) throw new Error('Failed to add agent');
   return data;
 }
 
-export async function getActor(
+export async function getAgent(
   client: HelixDBClient,
   id: string
-): Promise<Actor | null> {
-  const result = await client.query('getActor', { id });
-  return (result as { actor?: Actor }).actor || null;
+): Promise<Agent | null> {
+  const result = await client.query('getAgent', { id });
+  return (result as { agent?: Agent }).agent || null;
 }
 
-export async function getActorByName(
+export async function getAgentByName(
   client: HelixDBClient,
   name: string
-): Promise<Actor | null> {
-  const result = await client.query('getActorByName', { name });
-  return (result as { actor?: Actor }).actor || null;
+): Promise<Agent | null> {
+  const result = await client.query('getAgentByName', { name });
+  return (result as { agent?: Agent }).agent || null;
 }
 
-export async function getAllActors(client: HelixDBClient): Promise<Actor[]> {
-  const result = await client.query('getAllActors', {});
-  const data = (result as { actors?: unknown }).actors;
-  return normalizeArray<Actor>(data);
-}
-
-export async function deleteActor(
-  client: HelixDBClient,
-  id: string
-): Promise<void> {
-  await client.query('deleteActor', { id });
+export async function getAllAgents(client: HelixDBClient): Promise<Agent[]> {
+  const result = await client.query('getAllAgents', {});
+  const data = (result as { agents?: unknown }).agents;
+  return normalizeArray<Agent>(data);
 }
 
 // ============================================
@@ -477,12 +484,20 @@ export async function linkInContext(
   await client.query('linkInContext', { memId, contextId });
 }
 
-export async function linkProposedBy(
+export async function linkProposedByAgent(
   client: HelixDBClient,
   memId: string,
-  actorId: string
+  agentId: string
 ): Promise<void> {
-  await client.query('linkProposedBy', { memId, actorId });
+  await client.query('linkProposedByAgent', { memId, agentId });
+}
+
+export async function linkVersionOf(
+  client: HelixDBClient,
+  memId: string,
+  objectId: string
+): Promise<void> {
+  await client.query('linkVersionOf', { memId, objectId });
 }
 
 export async function linkHasEvidence(
@@ -719,13 +734,13 @@ export async function getMemContexts(
   return normalizeArray<Context>(data);
 }
 
-export async function getMemActor(
+export async function getMemAgents(
   client: HelixDBClient,
   memId: string
-): Promise<Actor[]> {
-  const result = await client.query('getMemActor', { memId });
-  const data = (result as { actors?: unknown }).actors;
-  return normalizeArray<Actor>(data);
+): Promise<Agent[]> {
+  const result = await client.query('getMemAgents', { memId });
+  const data = (result as { agents?: unknown }).agents;
+  return normalizeArray<Agent>(data);
 }
 
 export async function getMemEvidence(
@@ -798,4 +813,18 @@ export async function getRelatedMems(
   const result = await client.query('getRelatedMems', { memId });
   const data = (result as { related?: unknown }).related;
   return normalizeArray<Mem>(data);
+}
+
+export async function getObjectVersions(
+  client: HelixDBClient,
+  objectId: string
+): Promise<Mem[]> {
+  const result = await client.query('getObjectVersions', { objectId });
+  const data = (result as { versions?: unknown }).versions;
+  const mems = normalizeArray<Mem>(data);
+  return mems.map((m) => ({
+    ...m,
+    tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
+    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
+  }));
 }

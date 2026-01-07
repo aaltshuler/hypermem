@@ -8,7 +8,13 @@
 **Living Memory for Agents**
 
 ### Subhead
+Opinionated memory framework for agents.
 Wholistic memory framework that evolves, connects, and never goes stale.
+
+Ontology-focused
+Polliantion and hydration
+Validation and cleanup
+Identity across contexts
 
 ### Tagline options
 - *Memory that thinks.*
