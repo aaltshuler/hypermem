@@ -1,34 +1,36 @@
 # HYPERMEM ONTOLOGY
 ---
-VERSION: 0.1.0
-UPDATED: 2026-01-07
+VERSION: 1.1.0
+UPDATED: 2026-01-08
 ---
 
 ```
 ENTITIES
-├── ACTOR (Person, Agent)
+├── AGENT (name, model, function)
 ├── CONTEXT (Org, Project)
-├── OBJECT (Tool, Lib, Stack, API, ...)
-├── MEM (Decision, Problem, Rule, BestPractice, ...)
+├── OBJECT (Language, Database, Framework, Lib, Tool, API, Model, ...)
+├── MEM (Decision, Problem, Rule, BestPractice, Version, ...)
 ├── TRACE (SessionLog, Event, Snapshot, CheckResult)
 └── REFERENCE (url, doc, commit, pr, adr, ticket, ...)
 ```
 
 Universal MEM structure (no per-MEM "symptoms/area/etc." fields).
+Actor is a field on MEM (enum array: human|agent), not a separate entity.
 
 ---
 
 ## Entities
 
-### ACTOR
+### AGENT
 
 ```
-ACTOR
-├── Person
-└── Agent
+AGENT
+├── name (string, indexed)
+├── model (string) - e.g., "gpt-5.2-2025-12-11"
+└── function (string) - agent's purpose/role
 ```
 
-> "Who did/said/validated/decided."
+> "AI agent instance that proposed/created a MEM."
 
 ---
 
@@ -48,14 +50,18 @@ CONTEXT
 
 ```
 OBJECT
-├── Tool
-├── Lib
-├── Stack
-├── Template
-├── API
-├── Model
+├── Language (TypeScript, Python, JavaScript)
+├── Database (MongoDB, Neo4j, HelixDB, Redis)
+├── Framework (Next.js, React, FastAPI, TailwindCSS)
+├── Lib (Zustand, shadcn/ui, Radix UI, dnd-kit)
+├── Tool (npm, Poetry, Docker, Jest)
+├── API (Vercel AI SDK, Clerk, Langfuse)
+├── Model (GPT, Claude Opus, Claude Sonnet)
 ├── Component
-└── Service
+├── Service
+├── Font (Geist, Urbanist, JetBrains Mono)
+├── Stack
+└── Template
 ```
 
 > "What item/thing is this about?"
@@ -67,14 +73,15 @@ OBJECT
 ```
 MEM
 ├── Decision
-├── **Problem**
+├── Problem
 ├── Rule
 ├── BestPractice
 ├── Convention
 ├── AntiPattern
 ├── Trait
 ├── Preference
-└── Causal          ← can have HAS_CAUSE / HAS_EFFECT edges
+├── Causal          ← can have HAS_CAUSE / HAS_EFFECT edges
+└── Version         ← linked to Model OBJECT via VERSION_OF edge
 ```
 
 > MEM is the curated, queryable unit that can be updated via superseding/contradiction.
@@ -124,11 +131,12 @@ This is the **same field set for every MEM type** (Decision/Problem/Rule/… all
 ### Required fields (minimal)
 
 * `id` (uuid)
-* `mem_type` (enum: Decision|Problem|Rule|BestPractice|Convention|AntiPattern|Trait|Preference|Causal)
+* `mem_type` (enum: Decision|Problem|Rule|BestPractice|Convention|AntiPattern|Trait|Preference|Causal|Version)
 * `mem_state` (enum: `FACT | ASSUMPTION`)
 * `confidence` (enum: `low | med | high`) **only if** `mem_state=ASSUMPTION`
-* `statement` (canonical natural-language statement; the “memory payload”) claim
+* `statement` (canonical natural-language statement; the "memory payload") claim
 * `created_at`
+* `actors` (enum array: `human | agent`) - who contributed to this MEM
 
 ### Universal lifecycle fields (strongly recommended)
 
@@ -148,8 +156,10 @@ This is the **same field set for every MEM type** (Decision/Problem/Rule/… all
   "What this MEM is about."
 * `IN_CONTEXT → Context`
   "Where it applies."
-* `PROPOSED_BY → Actor`
-  "Who created/curated this MEM."
+* `PROPOSED_BY_AGENT → Agent`
+  "Which AI agent proposed/created this MEM." (optional, for agent-created MEMs)
+* `VERSION_OF → Object`
+  "Which Model this Version MEM describes." (only for Version MEMs)
 * `HAS_EVIDENCE → (Trace | Reference)`
   "What backs this memory."
 
@@ -191,16 +201,20 @@ This keeps MEM schema stable while still allowing richness.
 
 ```text
 ABOUT
-  (MEM | Trace | Reference) -> (Actor | Object | Context)
-  What this memory/trace/reference is primarily about.
+  MEM -> Object
+  What this memory is primarily about.
 
 IN_CONTEXT
-  (MEM | Trace | Reference) -> Context
+  MEM -> Context
   Scope boundary where the memory applies.
 
-PROPOSED_BY
-  (MEM | Trace | Reference) -> Actor
-  Who created/curated/recorded it.
+PROPOSED_BY_AGENT
+  MEM -> Agent
+  Which AI agent proposed/created this MEM.
+
+VERSION_OF
+  MEM(Version) -> Object(Model)
+  Links a Version MEM to its Model object.
 
 HAS_EVIDENCE
   MEM -> (Trace | Reference)
@@ -227,7 +241,7 @@ HAS_EFFECT
   Endpoint relation for causal memories.
 
 RELATED
-  (any) -> (any)
+  MEM -> MEM
   Generic association fallback (avoid overuse).
 ```
 
@@ -242,3 +256,5 @@ RELATED
 3. **Conflicts:** link `CONTRADICTS` and mark at least one as `CONTESTED`.
 4. **Evidence:** every MEM should have at least one `HAS_EVIDENCE → (Trace | Reference)`.
 5. **Causality:** put causality into `Causal` MEM with `HAS_CAUSE/HAS_EFFECT`.
+6. **Actors:** use `actors` field (human|agent array) to track who contributed. For agent-created MEMs, also link `PROPOSED_BY_AGENT → Agent`.
+7. **Versions:** use `Version` MEM type with `VERSION_OF → Object(Model)` edge to track model versions.
