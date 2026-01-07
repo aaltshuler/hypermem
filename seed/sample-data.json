@@ -1,0 +1,162 @@
+{
+  "memories": [
+    {
+      "category": "IDENTITY",
+      "subtype": "Preference",
+      "content": "Dark aesthetic (Ayu-dark theme)",
+      "importance": 0.8
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Preference",
+      "content": "Visual precision - specific colors (#0b0e14), no gaps",
+      "importance": 0.9
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Preference",
+      "content": "Concise communication - short, direct, no over-explanation",
+      "importance": 0.9
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Trait",
+      "content": "Core expertise: data analysis, data engineering, data science",
+      "importance": 1.0
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Trait",
+      "content": "Perfectionist, control-oriented",
+      "importance": 0.7
+    },
+    {
+      "category": "PATTERN",
+      "content": "DO NOT BUILD after each small change - batch operations",
+      "importance": 1.0
+    },
+    {
+      "category": "PATTERN",
+      "content": "Figure out first, then build - no premature implementation",
+      "importance": 0.9
+    },
+    {
+      "category": "PATTERN",
+      "content": "Iterative refinement - small tweaks, see result, repeat",
+      "importance": 0.8
+    },
+    {
+      "category": "ANTIPATTERN",
+      "content": "Over-engineering, unnecessary features",
+      "importance": 0.9
+    },
+    {
+      "category": "KNOWLEDGE",
+      "subtype": "Fact",
+      "content": "Uses Groq for fast inference",
+      "importance": 0.7
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Preference",
+      "content": "GPT-5.2 only for production, never older models",
+      "importance": 1.0
+    },
+    {
+      "category": "IDENTITY",
+      "subtype": "Preference",
+      "content": "Opus 4.5 for specific reasoning tasks",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Zod for validation (TypeScript)",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Zustand for state management (TypeScript)",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "TanStack Query for data fetching (TypeScript)",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Jest for testing (TypeScript)",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Pydantic for validation (Python)",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "FastAPI for API framework (Python)",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Structlog for logging (Python)",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "HelixDB - primary graph database",
+      "importance": 1.0
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "Neo4j - secondary graph database",
+      "importance": 0.7
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "MongoDB - document store",
+      "importance": 0.7
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "Redis - cache",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "Supabase - SQL and blob storage",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Tool",
+      "content": "Clerk - authentication",
+      "importance": 0.8
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "shadcn for UI components",
+      "importance": 0.9
+    },
+    {
+      "category": "OPS",
+      "subtype": "Lib",
+      "content": "Carbon Icons for icon set",
+      "importance": 0.7
+    }
+  ]
+}
