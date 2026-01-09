@@ -10,6 +10,7 @@ import { objectCommand } from './commands/object.js';
 import { linkCommand } from './commands/link.js';
 import { contextCommand } from './commands/context.js';
 import { agentCommand } from './commands/agent.js';
+import { realityCheckCommand } from './commands/reality-check.js';
 
 const program = new Command();
 
@@ -31,5 +32,8 @@ program.addCommand(agentCommand);
 
 // Edge commands
 program.addCommand(linkCommand);
+
+// Utility commands
+program.addCommand(realityCheckCommand);
 
 program.parse();

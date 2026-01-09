@@ -3,6 +3,23 @@ import { listPipeline, listAllPipeline } from '../pipelines/read.js';
 import type { MemType, MemStatus } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
+const MEM_TYPES: MemType[] = [
+  'Decision', 'Problem', 'Rule', 'BestPractice', 'Convention',
+  'AntiPattern', 'Trait', 'Preference', 'Causal', 'Version'
+];
+
+const MEM_STATUSES: MemStatus[] = ['ACTIVE', 'SUPERSEDED', 'CONTESTED', 'ARCHIVED'];
+
+function normalizeType(input: string): MemType | undefined {
+  const lower = input.toLowerCase();
+  return MEM_TYPES.find(t => t.toLowerCase() === lower);
+}
+
+function normalizeStatus(input: string): MemStatus | undefined {
+  const upper = input.toUpperCase();
+  return MEM_STATUSES.find(s => s === upper);
+}
+
 export const listCommand = new Command('list')
   .description('List memories (all or filtered)')
   .option('-t, --type <type>', 'Filter by MEM type')
@@ -11,11 +28,31 @@ export const listCommand = new Command('list')
   .action(async (options) => {
     try {
       let mems;
+      let memType: MemType | undefined;
+      let memStatus: MemStatus | undefined;
 
-      if (options.type || options.status) {
+      if (options.type) {
+        memType = normalizeType(options.type);
+        if (!memType) {
+          console.error(`Invalid type: "${options.type}"`);
+          console.error(`Valid types: ${MEM_TYPES.join(', ')}`);
+          process.exit(1);
+        }
+      }
+
+      if (options.status) {
+        memStatus = normalizeStatus(options.status);
+        if (!memStatus) {
+          console.error(`Invalid status: "${options.status}"`);
+          console.error(`Valid statuses: ${MEM_STATUSES.join(', ')}`);
+          process.exit(1);
+        }
+      }
+
+      if (memType || memStatus) {
         mems = await listPipeline({
-          mem_type: options.type as MemType | undefined,
-          status: options.status as MemStatus | undefined,
+          mem_type: memType,
+          status: memStatus,
         });
       } else {
         mems = await listAllPipeline();

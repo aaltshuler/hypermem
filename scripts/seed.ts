@@ -126,6 +126,7 @@ interface MemData {
   type: MemType;
   state: MemState;
   title?: string;
+  notes?: string;
   actors: ActorType[];
   linkTo?: string[]; // Object names to link via About
 }
@@ -174,26 +175,81 @@ const mems: MemData[] = [
   { statement: 'Prefer Vercel-style minimalism: dark bg, clean typography', type: 'BestPractice', state: 'FACT', actors: ['human'], linkTo: ['Vercel'] },
   { statement: 'Use Zustand for React state management', type: 'BestPractice', state: 'FACT', actors: ['human'], linkTo: ['Zustand', 'React'] },
 
-  // Traits (12)
-  { statement: 'Direct/Imperative communication - Commands: review, add, remove, fix, build', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Visual thinker - prefers ASCII mockups and sequence diagrams', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Multi-line messages - Combines command + context + constraints in one message', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Blunt corrections - no, not working, wrong, wait', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'ALL CAPS for frustration emphasis', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Numbered responses - 1 - no, 2 - separate, 3 - yes', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Explicit preferences - States likes/dislikes clearly', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Questions architecture - how can we optimize it?', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Challenges assumptions - do we really need it?, why are we using this?', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Very opinionated - References specific libraries and approaches', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Semantic precision - Cares about correct and precise semantics', type: 'Trait', state: 'FACT', actors: ['human'] },
-  { statement: 'Investigative - what creds I need to run test?', type: 'Trait', state: 'FACT', actors: ['human'] },
+  // Traits (5)
+  {
+    statement: 'Uses short, command-style messages to drive work forward.',
+    type: 'Trait',
+    state: 'FACT',
+    title: 'Direct/Imperative Communication',
+    notes: 'Common commands include "review", "add", "remove", "fix", "build", "commit and push". Expects immediate action, not discussion.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Maintains explicit control over architecture, components, and model selection.',
+    type: 'Trait',
+    state: 'FACT',
+    title: 'Control-Seeking',
+    notes: '"NEVER change LLM without asking", specifies exact version numbers, rejects auto-decisions. Won\'t delegate critical choices.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Tends to use only specific libs and APIs, not open to alternatives once decided.',
+    type: 'Trait',
+    state: 'FACT',
+    title: 'Very Opinionated',
+    notes: 'References exact model versions (gpt-5.2-2025-12-11), specific libraries (pydantic-ai over manual loops), and explicit "NEVER use X" rules.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Cares deeply about correct terminology and precise meaning.',
+    type: 'Trait',
+    state: 'FACT',
+    title: 'Semantic Precision',
+    notes: 'Corrects conceptual misunderstandings immediately: "NO! Pannel select LABEL, not NODE". Insists on semantic relations (PART_OF, HAS_DIMENSION) over implicit ones. Slug vs ID matters.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Asks detailed questions to understand system state before acting.',
+    type: 'Trait',
+    state: 'FACT',
+    title: 'Investigative',
+    notes: '"What creds I need to run test?", "which fields are mandatory?", "where do we get this data?". Needs full context before proceeding.',
+    actors: ['human'],
+  },
 
-  // Preferences (5)
-  { statement: 'Explicit control - Especially over architecture, components and libs', type: 'Preference', state: 'FACT', actors: ['human'] },
-  { statement: 'Minimalistic & clean approach - No over-engineering, simple over complex', type: 'Preference', state: 'FACT', actors: ['human'] },
-  { statement: 'Quality - thorough reviews, optimization, testing before commit', type: 'Preference', state: 'FACT', actors: ['human'] },
-  { statement: 'Consistency - Same patterns across projects', type: 'Preference', state: 'FACT', actors: ['human'] },
-  { statement: 'Knowledge-driven - ONTOLOGY.md, schema docs, changelogs, conventions', type: 'Preference', state: 'FACT', actors: ['human'] },
+  // Preferences (4)
+  {
+    statement: 'Prefers to communicate UI ideas with ASCII mockups before implementation.',
+    type: 'Preference',
+    state: 'FACT',
+    title: 'UI Visualization',
+    notes: 'Requests "create UI mockup (use ascii)" before coding UI. Wants to see the layout visually before any code is written. Reduces misunderstandings and rework.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Prefers to visualize complex logic with ASCII sequence diagrams.',
+    type: 'Preference',
+    state: 'FACT',
+    title: 'Visual Thinking',
+    notes: 'For workflows, integrations, and multi-step processes, asks for ASCII diagrams first. Helps validate approach before implementation begins.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Prefers to use same patterns and conventions across all projects.',
+    type: 'Preference',
+    state: 'FACT',
+    title: 'Pattern Consistency',
+    notes: 'Same stack, same color palette, same command palette pattern. Consistency reduces cognitive load.',
+    actors: ['human'],
+  },
+  {
+    statement: 'Prefers clean and minimalistic UI solutions over bloated ones.',
+    type: 'Preference',
+    state: 'FACT',
+    title: 'Minimalist Design',
+    notes: '"We need to unbundle and simplify", "remove cards, just use regular list". Questions every addition. Less is more.',
+    actors: ['human'],
+  },
 ];
 
 // Version Mems (linked to Model objects)
@@ -243,8 +299,11 @@ async function seedMems() {
   const now = new Date().toISOString();
 
   for (const mem of mems) {
-    // Generate embedding
-    const embedding = await generateEmbedding(mem.statement);
+    // Generate embedding (include notes for better semantic search)
+    const textToEmbed = mem.notes
+      ? `${mem.statement}\n\n${mem.notes}`
+      : mem.statement;
+    const embedding = await generateEmbedding(textToEmbed);
 
     // Add mem
     const result = await addMem(client, {
@@ -253,6 +312,7 @@ async function seedMems() {
       statement: mem.statement,
       status: 'ACTIVE',
       title: mem.title,
+      notes: mem.notes,
       actors: mem.actors,
       created_at: now,
     });

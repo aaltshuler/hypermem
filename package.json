@@ -4,7 +4,8 @@
   "description": "Agentic memory framework for coding agents, business agents, and personal assistants",
   "type": "module",
   "bin": {
-    "hyper-memory": "./dist/index.js"
+    "hyper-memory": "./dist/index.js",
+    "hypermem": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

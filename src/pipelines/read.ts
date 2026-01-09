@@ -81,21 +81,20 @@ export async function listPipeline(
   const { mem_type, status } = options;
   const client = getHelixClient();
 
+  // Get all mems and filter client-side (getMemsByType/Status have single-result bug)
+  logger.info({ mem_type, status }, 'Listing mems');
+  const allMems = await getAllMems(client);
+
+  let filtered = allMems;
   if (mem_type) {
-    logger.info({ mem_type }, 'Listing mems by type');
-    const mems = await getMemsByType(client, mem_type);
-    logger.info({ count: mems.length }, 'List complete');
-    return mems;
+    filtered = filtered.filter(m => m.mem_type === mem_type);
   }
-
   if (status) {
-    logger.info({ status }, 'Listing mems by status');
-    const mems = await getMemsByStatus(client, status);
-    logger.info({ count: mems.length }, 'List complete');
-    return mems;
+    filtered = filtered.filter(m => m.status === status);
   }
 
-  return listAllPipeline();
+  logger.info({ count: filtered.length }, 'List complete');
+  return filtered;
 }
 
 export async function listAllPipeline(): Promise<Mem[]> {

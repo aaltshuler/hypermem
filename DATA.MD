@@ -62,7 +62,7 @@
 11. Using undocumented relations in knowledge graphs
 12. Conceptual misunderstandings (label vs node)
 13. Breaking basic functionality (Enter key, etc.)
-14. "Duct-tape solutions" - poor implementation quality
+14. Duct tape solutions, fast and dirty fixes
 
 ## Best Practices
 We use iterative approach: frequent review, feedback, fix cycle

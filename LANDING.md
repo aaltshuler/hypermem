@@ -23,6 +23,10 @@ Identity across contexts
 
 ---
 
+Grpah, not tables
+
+
+
 ## Problem
 
 ### Section: The Amnesia Problem
