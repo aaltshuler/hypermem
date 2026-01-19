@@ -1,8 +1,19 @@
 # Hypermem
 
-Persistent, queryable external memory for AI coding agents.
+Living memory for AI agents.
 
-Hypermem stores curated memories (rules, decisions, conventions, versions, preferences) in a graph database with vector search. Agents query it to stay consistent across sessions.
+Opinionated memory framework designed for active curation and hydration over time.
+
+## Principles
+
+**Memory is a signal vs noise problem.**
+Not everything deserves to be remembered. Hypermem stores curated, high-value memories - rules, decisions, conventions, versions, preferences - not raw logs or conversation dumps.
+
+**Graphs allow agents to reason through memory.**
+Memories connect to objects, contexts, and each other. Agents traverse relationships to understand why decisions were made, what superseded what, and how things relate.
+
+**Memory needs to be hydrated and pollinated.**
+Stale memory is dead memory. Hypermem validates facts, hydrates assumptions, notices contradictions, and evolves memory via append-only updates.
 
 ## Requirements
 
