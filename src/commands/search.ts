@@ -1,40 +1,51 @@
 import { Command } from 'commander';
 import { readPipeline } from '../pipelines/read.js';
-import type { MemStatus } from '../types/index.js';
-import { logger } from '../utils/logger.js';
+import { MemStatusEnum } from '../types/schemas.js';
+import { parsePositiveInt } from '../utils/validate.js';
+import { handleError, output, validateEnum } from '../utils/cli.js';
+import { formatMemSearchResult, formatNoneFound } from '../utils/format.js';
 
 export const searchCommand = new Command('search')
   .description('Search memories by semantic similarity')
   .argument('<query>', 'Search query')
-  .option('-l, --limit <number>', 'Max results', parseInt, 10)
-  .option('-s, --status <status>', 'Filter by status (ACTIVE|SUPERSEDED|CONTESTED|ARCHIVED)')
+  .option('-l, --limit <number>', 'Max results', '10')
+  .option('-s, --status <status>', 'Filter by status')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Choices:
+  --status: ${MemStatusEnum.options.join(', ')}
+
+Examples:
+  $ hypermem search "TypeScript best practices"
+  $ hypermem search "database" -l 5
+  $ hypermem search "conventions" -s ACTIVE --json`)
   .action(async (query: string, options) => {
     try {
-      const results = await readPipeline(query, {
-        limit: options.limit,
-        status: options.status as MemStatus | undefined,
-      });
+      const limit = parsePositiveInt(options.limit, 'limit');
+      const status = options.status
+        ? validateEnum(options.status, MemStatusEnum, 'status')
+        : undefined;
+
+      const results = await readPipeline(query, { limit, status });
 
       if (results.length === 0) {
-        console.log('No memories found');
+        output({ results: [], count: 0 }, options.json, () => {
+          formatNoneFound('memories');
+        });
         return;
       }
 
-      console.log(`Found ${results.length} memories:\n`);
-
-      for (let i = 0; i < results.length; i++) {
-        const r = results[i];
-        const { mem } = r;
-        console.log(`${i + 1}. [${mem.mem_type}] ${mem.mem_state}${mem.confidence ? ` (${mem.confidence})` : ''} (score: ${r.score.toFixed(3)})`);
-        console.log(`   ${mem.statement}`);
-        if (mem.title) console.log(`   title: ${mem.title}`);
-        if (mem.notes) console.log(`   notes: ${mem.notes.slice(0, 100)}${mem.notes.length > 100 ? '...' : ''}`);
-        console.log(`   id: ${mem.id} | status: ${mem.status}`);
-        console.log();
-      }
+      output(
+        { results: results.map((r) => ({ ...r.mem, score: r.score })), count: results.length },
+        options.json,
+        () => {
+          console.log(`Found ${results.length} memories:\n`);
+          for (let i = 0; i < results.length; i++) {
+            formatMemSearchResult(results[i].mem, results[i].score, i + 1);
+          }
+        }
+      );
     } catch (error) {
-      logger.error(error, 'Search failed');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Search failed');
     }
   });

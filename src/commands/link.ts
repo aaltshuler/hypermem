@@ -5,31 +5,41 @@ import {
   linkInContext,
   linkProposedByAgent,
   linkVersionOf,
+  linkHasEvidence,
+  linkHasEvidenceRef,
   linkSupersedes,
   linkContradicts,
   linkDependsOn,
+  linkHasCause,
+  linkHasEffect,
   linkRelated,
   updateMemStatus,
 } from '../db/client.js';
-import { logger } from '../utils/logger.js';
+import { handleError } from '../utils/cli.js';
 
 export const linkCommand = new Command('link')
-  .description('Create edges between entities');
+  .description('Create edges between entities')
+  .addHelpText('after', `
+Examples:
+  $ hypermem link about <memId> <objectId>      # Link mem to what it's about
+  $ hypermem link context <memId> <contextId>   # Link mem to where it applies
+  $ hypermem link supersedes <new> <old> -r "Updated info"`);
 
 linkCommand
   .command('about')
   .description('Link a MEM to an OBJECT (what the memory is about)')
   .argument('<memId>', 'Memory ID')
   .argument('<objectId>', 'Object ID')
+  .addHelpText('after', `
+Example:
+  $ hypermem link about abc123 def456  # Link mem about TypeScript`)
   .action(async (memId: string, objectId: string) => {
     try {
       const client = getHelixClient();
       await linkAbout(client, memId, objectId);
       console.log(`Linked MEM ${memId} -> ABOUT -> Object ${objectId}`);
     } catch (error) {
-      logger.error(error, 'Failed to create link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create link');
     }
   });
 
@@ -38,15 +48,16 @@ linkCommand
   .description('Link a MEM to a CONTEXT (where it applies)')
   .argument('<memId>', 'Memory ID')
   .argument('<contextId>', 'Context ID')
+  .addHelpText('after', `
+Example:
+  $ hypermem link context abc123 def456  # Link mem to my-project`)
   .action(async (memId: string, contextId: string) => {
     try {
       const client = getHelixClient();
       await linkInContext(client, memId, contextId);
       console.log(`Linked MEM ${memId} -> IN_CONTEXT -> Context ${contextId}`);
     } catch (error) {
-      logger.error(error, 'Failed to create link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create link');
     }
   });
 
@@ -61,9 +72,7 @@ linkCommand
       await linkProposedByAgent(client, memId, agentId);
       console.log(`Linked MEM ${memId} -> PROPOSED_BY -> Agent ${agentId}`);
     } catch (error) {
-      logger.error(error, 'Failed to create link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create link');
     }
   });
 
@@ -78,9 +87,37 @@ linkCommand
       await linkVersionOf(client, memId, objectId);
       console.log(`Linked MEM ${memId} -> VERSION_OF -> Object ${objectId}`);
     } catch (error) {
-      logger.error(error, 'Failed to create link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create link');
+    }
+  });
+
+linkCommand
+  .command('trace')
+  .description('Link a MEM to a TRACE as evidence')
+  .argument('<memId>', 'Memory ID')
+  .argument('<traceId>', 'Trace ID')
+  .action(async (memId: string, traceId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkHasEvidence(client, memId, traceId);
+      console.log(`Linked MEM ${memId} -> HAS_EVIDENCE -> Trace ${traceId}`);
+    } catch (error) {
+      handleError(error, 'Failed to create link');
+    }
+  });
+
+linkCommand
+  .command('evidence')
+  .description('Link a MEM to a REFERENCE as evidence')
+  .argument('<memId>', 'Memory ID')
+  .argument('<refId>', 'Reference ID')
+  .action(async (memId: string, refId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkHasEvidenceRef(client, memId, refId);
+      console.log(`Linked MEM ${memId} -> HAS_EVIDENCE_REF -> Reference ${refId}`);
+    } catch (error) {
+      handleError(error, 'Failed to create link');
     }
   });
 
@@ -90,6 +127,9 @@ linkCommand
   .argument('<newMemId>', 'New memory ID')
   .argument('<oldMemId>', 'Old memory ID being superseded')
   .requiredOption('-r, --reason <reason>', 'Reason for superseding')
+  .addHelpText('after', `
+Example:
+  $ hypermem link supersedes new123 old456 -r "Updated based on new findings"`)
   .action(async (newMemId: string, oldMemId: string, options) => {
     try {
       const client = getHelixClient();
@@ -100,9 +140,7 @@ linkCommand
       console.log(`Linked MEM ${newMemId} -> SUPERSEDES -> MEM ${oldMemId}`);
       console.log(`Updated MEM ${oldMemId} status to SUPERSEDED`);
     } catch (error) {
-      logger.error(error, 'Failed to create supersedes link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create supersedes link');
     }
   });
 
@@ -120,9 +158,7 @@ linkCommand
       console.log(`Linked MEM ${memId1} -> CONTRADICTS -> MEM ${memId2}`);
       console.log(`Updated MEM ${memId2} status to CONTESTED`);
     } catch (error) {
-      logger.error(error, 'Failed to create contradicts link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create contradicts link');
     }
   });
 
@@ -137,9 +173,37 @@ linkCommand
       await linkDependsOn(client, memId, dependsOnMemId);
       console.log(`Linked MEM ${memId} -> DEPENDS_ON -> MEM ${dependsOnMemId}`);
     } catch (error) {
-      logger.error(error, 'Failed to create depends link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create depends link');
+    }
+  });
+
+linkCommand
+  .command('cause')
+  .description('Link an effect MEM to its cause MEM (for Causal types)')
+  .argument('<effectMemId>', 'Effect memory ID')
+  .argument('<causeMemId>', 'Cause memory ID')
+  .action(async (effectMemId: string, causeMemId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkHasCause(client, effectMemId, causeMemId);
+      console.log(`Linked MEM ${effectMemId} -> HAS_CAUSE -> MEM ${causeMemId}`);
+    } catch (error) {
+      handleError(error, 'Failed to create cause link');
+    }
+  });
+
+linkCommand
+  .command('effect')
+  .description('Link a cause MEM to its effect MEM (for Causal types)')
+  .argument('<causeMemId>', 'Cause memory ID')
+  .argument('<effectMemId>', 'Effect memory ID')
+  .action(async (causeMemId: string, effectMemId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkHasEffect(client, causeMemId, effectMemId);
+      console.log(`Linked MEM ${causeMemId} -> HAS_EFFECT -> MEM ${effectMemId}`);
+    } catch (error) {
+      handleError(error, 'Failed to create effect link');
     }
   });
 
@@ -154,8 +218,6 @@ linkCommand
       await linkRelated(client, memId1, memId2);
       console.log(`Linked MEM ${memId1} -> RELATED -> MEM ${memId2}`);
     } catch (error) {
-      logger.error(error, 'Failed to create related link');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to create related link');
     }
   });

@@ -15,9 +15,9 @@ QUERY addMem(
     title: String,
     tags: String,
     notes: String,
-    valid_from: String,
-    valid_to: String,
-    created_at: String,
+    valid_from: Date,
+    valid_to: Date,
+    created_at: Date,
     actors: String
 ) =>
     mem <- AddN<Mem>({
@@ -52,6 +52,34 @@ QUERY getMemsByType(mem_type: String) =>
 QUERY getMemsByStatus(status: String) =>
     mems <- N<Mem>({status: status})
     RETURN mems
+
+QUERY deleteMem(id: ID) =>
+    DROP N<Mem>(id)
+    RETURN "deleted"
+
+QUERY updateMemLastValidated(id: ID, last_validated_at: Date) =>
+    mem <- N<Mem>(id)::UPDATE({ last_validated_at: last_validated_at })
+    RETURN mem
+
+QUERY getContextByName(name: String) =>
+    ctx <- N<Context>({name: name})
+    RETURN ctx
+
+QUERY deleteContext(id: ID) =>
+    DROP N<Context>(id)
+    RETURN "deleted"
+
+QUERY deleteObject(id: ID) =>
+    DROP N<Object>(id)
+    RETURN "deleted"
+
+QUERY deleteTrace(id: ID) =>
+    DROP N<Trace>(id)
+    RETURN "deleted"
+
+QUERY deleteReference(id: ID) =>
+    DROP N<Reference>(id)
+    RETURN "deleted"
 
 // ============================================
 // OBJECT CRUD
@@ -145,7 +173,7 @@ QUERY getAllAgents() =>
 
 QUERY addTrace(
     trace_type: String,
-    timestamp: String,
+    timestamp: Date,
     summary: String,
     payload: String
 ) =>
@@ -177,7 +205,7 @@ QUERY addReference(
     ref_type: String,
     title: String,
     uri: String,
-    retrieved_at: String,
+    retrieved_at: Date,
     snippet: String,
     full_text: String
 ) =>
@@ -267,7 +295,7 @@ QUERY linkRelated(memId1: ID, memId2: ID) =>
 // VECTOR OPERATIONS - Mem
 // ============================================
 
-QUERY addMemEmbedding(memId: String, status: String, createdAt: String, embedding: [F64]) =>
+QUERY addMemEmbedding(memId: String, status: String, createdAt: Date, embedding: [F64]) =>
     vec <- AddV<MemEmbedding>(embedding, {
         memId: memId,
         status: status,

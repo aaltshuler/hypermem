@@ -20,6 +20,8 @@ export interface WritePipelineInput {
   tags?: string[];
   notes?: string;
   actors?: ActorType[];
+  valid_from?: string;
+  valid_to?: string;
 }
 
 export interface WritePipelineResult {
@@ -97,6 +99,8 @@ export async function writePipeline(
     notes: validated.notes,
     created_at: now,
     actors: validated.actors,
+    valid_from: input.valid_from,
+    valid_to: input.valid_to,
   };
 
   const mem = await addMem(client, memParams);

@@ -1,5 +1,5 @@
 [project]
-name = "hyper-memory"
+name = "hypermem"
 queries = "./db/"
 container_runtime = "docker"
 

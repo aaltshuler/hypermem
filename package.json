@@ -1,10 +1,9 @@
 {
-  "name": "hyper-memory",
-  "version": "0.1.0",
+  "name": "hypermem",
+  "version": "0.3.0",
   "description": "Agentic memory framework for coding agents, business agents, and personal assistants",
   "type": "module",
   "bin": {
-    "hyper-memory": "./dist/index.js",
     "hypermem": "./dist/index.js"
   },
   "scripts": {

@@ -1,18 +1,26 @@
 import { Command } from 'commander';
 import { getHelixClient, deleteMem } from '../db/client.js';
-import { logger } from '../utils/logger.js';
+import { handleError, confirmDelete } from '../utils/cli.js';
 
 export const deleteCommand = new Command('delete')
   .description('Delete a memory by ID')
   .argument('<id>', 'Memory ID to delete')
-  .action(async (id: string) => {
+  .option('-f, --force', 'Skip confirmation prompt')
+  .addHelpText('after', `
+Examples:
+  $ hypermem delete 1f0f0ed5-4486-6187-a1a5-010203040506
+  $ hypermem delete 1f0f0ed5-4486-6187-a1a5-010203040506 -f`)
+  .action(async (id: string, options) => {
     try {
+      const confirmed = await confirmDelete('memory', id, options.force);
+      if (!confirmed) {
+        console.log('Cancelled');
+        return;
+      }
       const client = getHelixClient();
       await deleteMem(client, id);
       console.log(`Deleted memory: ${id}`);
     } catch (error) {
-      logger.error(error, 'Delete failed');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Delete failed');
     }
   });

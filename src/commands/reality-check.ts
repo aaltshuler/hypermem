@@ -6,20 +6,20 @@ export const realityCheckCommand = new Command('reality-check')
   .action(async () => {
     const now = new Date();
 
-    // Format date components
-    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
-    const month = now.toLocaleDateString('en-US', { month: 'long' });
-    const day = now.getDate();
-    const year = now.getFullYear();
+    // Format date components in UTC
+    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    const month = now.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+    const day = now.getUTCDate();
+    const year = now.getUTCFullYear();
     const time = now.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
+      timeZone: 'UTC'
     });
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const dateStr = `${dayOfWeek}, ${month} ${day}, ${year}`;
-    const timeStr = `${time} ${timezone}`;
+    const timeStr = `${time} UTC`;
 
     // Calculate box width based on content (2 spaces padding each side)
     const maxLen = Math.max(dateStr.length, timeStr.length);

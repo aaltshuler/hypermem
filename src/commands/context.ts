@@ -5,8 +5,10 @@ import {
   getAllContexts,
   deleteContext,
 } from '../db/client.js';
-import type { ContextType } from '../types/index.js';
-import { logger } from '../utils/logger.js';
+import { ContextTypeEnum, ContextInputSchema } from '../types/schemas.js';
+import { validate } from '../utils/validate.js';
+import { handleError, output, confirmDelete } from '../utils/cli.js';
+import { formatContextSingle, formatContextList, formatNoneFound } from '../utils/format.js';
 
 export const contextCommand = new Command('context')
   .description('Manage CONTEXT entities (Org, Project)');
@@ -15,53 +17,58 @@ contextCommand
   .command('add')
   .description('Add a new context')
   .argument('<name>', 'Context name')
-  .requiredOption('-t, --type <type>', 'Context type (Org|Project)')
+  .requiredOption('-t, --type <type>', 'Context type')
   .option('-d, --desc <description>', 'Description')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Choices:
+  --type: ${ContextTypeEnum.options.join(', ')}
+
+Examples:
+  $ hypermem context add my-project -t Project -d "Main web app"
+  $ hypermem context add Acme Corp -t Org -d "Client organization"`)
   .action(async (name: string, options) => {
     try {
-      const client = getHelixClient();
-      const ctx = await addContext(client, {
-        context_type: options.type as ContextType,
+      const input = validate(ContextInputSchema, {
+        context_type: options.type,
         name,
         description: options.desc,
-      });
+      }, 'context');
 
-      console.log(`Added context:`);
-      console.log(`  id: ${ctx.id}`);
-      console.log(`  [${ctx.context_type}] ${ctx.name}`);
-      if (ctx.description) console.log(`  desc: ${ctx.description}`);
+      const client = getHelixClient();
+      const ctx = await addContext(client, input);
+
+      output(ctx, options.json, (c) => formatContextSingle(c));
     } catch (error) {
-      logger.error(error, 'Failed to add context');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to add context');
     }
   });
 
 contextCommand
   .command('list')
   .description('List all contexts')
-  .action(async () => {
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Examples:
+  $ hypermem context list
+  $ hypermem context list --json`)
+  .action(async (options) => {
     try {
       const client = getHelixClient();
       const ctxs = await getAllContexts(client);
 
       if (ctxs.length === 0) {
-        console.log('No contexts found');
+        output({ contexts: [], count: 0 }, options.json, () => {
+          formatNoneFound('contexts');
+        });
         return;
       }
 
-      console.log(`Found ${ctxs.length} contexts:\n`);
-
-      for (const ctx of ctxs) {
-        console.log(`[${ctx.context_type}] ${ctx.name}`);
-        if (ctx.description) console.log(`  desc: ${ctx.description}`);
-        console.log(`  id: ${ctx.id}`);
-        console.log();
-      }
+      output({ contexts: ctxs, count: ctxs.length }, options.json, () => {
+        formatContextList(ctxs);
+      });
     } catch (error) {
-      logger.error(error, 'Failed to list contexts');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to list contexts');
     }
   });
 
@@ -69,14 +76,22 @@ contextCommand
   .command('delete')
   .description('Delete a context by ID')
   .argument('<id>', 'Context ID to delete')
-  .action(async (id: string) => {
+  .option('-f, --force', 'Skip confirmation prompt')
+  .addHelpText('after', `
+Examples:
+  $ hypermem context delete 1f0f0ed5-4486-6187-a1a5-010203040506
+  $ hypermem context delete 1f0f0ed5-4486-6187-a1a5-010203040506 -f`)
+  .action(async (id: string, options) => {
     try {
+      const confirmed = await confirmDelete('context', id, options.force);
+      if (!confirmed) {
+        console.log('Cancelled');
+        return;
+      }
       const client = getHelixClient();
       await deleteContext(client, id);
       console.log(`Deleted context: ${id}`);
     } catch (error) {
-      logger.error(error, 'Failed to delete context');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to delete context');
     }
   });

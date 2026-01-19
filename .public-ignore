@@ -1,0 +1,26 @@
+# Files and folders to exclude from public repository
+# One pattern per line, supports glob patterns
+
+# Internal documentation
+.RAW/
+internal/
+
+# Personal seed data (use seed-examples.ts for public)
+scripts/seed.ts
+
+# Site/landing page (if private)
+SITE/
+
+# Work in progress
+WIP/
+*.wip
+*.draft
+
+# Local development
+.env.example
+.claude/
+
+# Notes and planning
+NOTES.md
+TODO.md
+PLANNING.md

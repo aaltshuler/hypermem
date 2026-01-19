@@ -16,10 +16,10 @@ N::Mem {
     title: String,
     tags: String,
     notes: String,
-    valid_from: String,
-    valid_to: String,
-    last_validated_at: String,
-    created_at: String,
+    valid_from: Date,
+    valid_to: Date,
+    last_validated_at: Date,
+    created_at: Date,
     actors: String
 }
 
@@ -48,7 +48,7 @@ N::Context {
 // TRACE - Internal records (sessions, events, snapshots)
 N::Trace {
     INDEX trace_type: String,
-    timestamp: String,
+    timestamp: Date,
     summary: String,
     payload: String
 }
@@ -58,7 +58,7 @@ N::Reference {
     INDEX ref_type: String,
     title: String,
     uri: String,
-    retrieved_at: String,
+    retrieved_at: Date,
     snippet: String,
     full_text: String
 }
@@ -93,7 +93,7 @@ E::Related { From: Mem, To: Mem, Properties: {} }
 V::MemEmbedding {
     memId: String,
     status: String,
-    createdAt: String
+    createdAt: Date
 }
 
 // Embed: title + snippet + full_text (chunked)

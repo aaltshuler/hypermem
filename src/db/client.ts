@@ -39,6 +39,14 @@ function normalizeArray<T>(data: unknown): T[] {
   return Array.isArray(data) ? (data as T[]) : [data as T];
 }
 
+// Helper to normalize date strings to RFC3339 format
+function normalizeDate(dateStr: string): string {
+  // If already has time component, return as-is
+  if (dateStr.includes('T')) return dateStr;
+  // Otherwise append midnight UTC
+  return `${dateStr}T00:00:00Z`;
+}
+
 // ============================================
 // MEM OPERATIONS
 // ============================================
@@ -62,6 +70,7 @@ export async function addMem(
   client: HelixDBClient,
   params: AddMemParams
 ): Promise<Mem> {
+  const createdAt = normalizeDate(params.created_at);
   const result = await client.query('addMem', {
     mem_type: params.mem_type,
     mem_state: params.mem_state,
@@ -71,9 +80,9 @@ export async function addMem(
     title: params.title || '',
     tags: JSON.stringify(params.tags || []),
     notes: params.notes || '',
-    valid_from: params.valid_from || '',
-    valid_to: params.valid_to || '',
-    created_at: params.created_at,
+    valid_from: normalizeDate(params.valid_from || params.created_at),
+    valid_to: normalizeDate(params.valid_to || params.created_at),
+    created_at: createdAt,
     actors: JSON.stringify(params.actors || []),
   });
   const data = (result as { mem?: Mem }).mem;
@@ -150,7 +159,27 @@ export async function deleteMem(
   await client.query('deleteMem', { id });
 }
 
-// Note: HelixQL doesn't support updates. For status changes,
+export async function updateMemLastValidated(
+  client: HelixDBClient,
+  id: string,
+  last_validated_at: string
+): Promise<Mem> {
+  const result = await client.query('updateMemLastValidated', {
+    id,
+    last_validated_at: normalizeDate(last_validated_at),
+  });
+  const data = (result as { mem?: Mem }).mem;
+  if (!data) throw new Error(`Failed to update mem ${id}`);
+  if (typeof data.tags === 'string') {
+    data.tags = data.tags ? JSON.parse(data.tags) : [];
+  }
+  if (typeof data.actors === 'string') {
+    data.actors = data.actors ? JSON.parse(data.actors) : [];
+  }
+  return data;
+}
+
+// Note: HelixQL doesn't support full updates. For status changes,
 // use delete + add pattern at application layer
 export async function updateMemStatus(
   client: HelixDBClient,
@@ -363,7 +392,7 @@ export async function addTrace(
 ): Promise<Trace> {
   const result = await client.query('addTrace', {
     trace_type: params.trace_type,
-    timestamp: params.timestamp,
+    timestamp: normalizeDate(params.timestamp),
     summary: params.summary,
     payload: params.payload || '',
   });
@@ -423,11 +452,11 @@ export async function addReference(
     ref_type: params.ref_type,
     title: params.title,
     uri: params.uri || '',
-    retrieved_at: params.retrieved_at || new Date().toISOString(),
+    retrieved_at: normalizeDate(params.retrieved_at || new Date().toISOString()),
     snippet: params.snippet || '',
     full_text: params.full_text || '',
   });
-  const data = (result as { ref?: Reference }).ref;
+  const data = (result as { reference?: Reference }).reference;
   if (!data) throw new Error('Failed to add reference');
   return data;
 }
@@ -437,14 +466,14 @@ export async function getReference(
   id: string
 ): Promise<Reference | null> {
   const result = await client.query('getReference', { id });
-  return (result as { ref?: Reference }).ref || null;
+  return (result as { reference?: Reference }).reference || null;
 }
 
 export async function getAllReferences(
   client: HelixDBClient
 ): Promise<Reference[]> {
   const result = await client.query('getAllReferences', {});
-  const data = (result as { refs?: unknown }).refs;
+  const data = (result as { references?: unknown }).references;
   return normalizeArray<Reference>(data);
 }
 
@@ -453,7 +482,7 @@ export async function getReferencesByType(
   ref_type: ReferenceType
 ): Promise<Reference[]> {
   const result = await client.query('getReferencesByType', { ref_type });
-  const data = (result as { refs?: unknown }).refs;
+  const data = (result as { references?: unknown }).references;
   return normalizeArray<Reference>(data);
 }
 
@@ -757,7 +786,7 @@ export async function getMemEvidenceRefs(
   memId: string
 ): Promise<Reference[]> {
   const result = await client.query('getMemEvidenceRefs', { memId });
-  const data = (result as { refs?: unknown }).refs;
+  const data = (result as { evidenceRefs?: unknown }).evidenceRefs;
   return normalizeArray<Reference>(data);
 }
 

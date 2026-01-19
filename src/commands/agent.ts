@@ -5,7 +5,10 @@ import {
   getAllAgents,
   getAgent,
 } from '../db/client.js';
-import { logger } from '../utils/logger.js';
+import { AgentInputSchema } from '../types/schemas.js';
+import { validate } from '../utils/validate.js';
+import { handleError, output } from '../utils/cli.js';
+import { formatAgentSingle, formatAgentList, formatNoneFound, formatNotFound } from '../utils/format.js';
 
 export const agentCommand = new Command('agent')
   .description('Manage AGENT entities (AI agent instances)');
@@ -15,53 +18,54 @@ agentCommand
   .description('Add a new agent')
   .argument('<name>', 'Agent name')
   .requiredOption('-m, --model <model>', 'Model identifier (e.g., gpt-5.2-2025-12-11)')
-  .option('-f, --function <function>', 'Agent function/purpose')
+  .option('--function <function>', 'Agent function/purpose')
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Examples:
+  $ hypermem agent add CodeAssist -m gpt-5.2-2025-12-11
+  $ hypermem agent add Reviewer -m claude-opus-4-5-20251101 --function "Code review"`)
   .action(async (name: string, options) => {
     try {
-      const client = getHelixClient();
-      const agent = await addAgent(client, {
+      const input = validate(AgentInputSchema, {
         name,
         model: options.model,
         function: options.function,
-      });
+      }, 'agent');
 
-      console.log(`Added agent:`);
-      console.log(`  id: ${agent.id}`);
-      console.log(`  name: ${agent.name}`);
-      console.log(`  model: ${agent.model}`);
-      if (agent.function) console.log(`  function: ${agent.function}`);
+      const client = getHelixClient();
+      const agent = await addAgent(client, input);
+
+      output(agent, options.json, (a) => formatAgentSingle(a));
     } catch (error) {
-      logger.error(error, 'Failed to add agent');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to add agent');
     }
   });
 
 agentCommand
   .command('list')
   .description('List all agents')
-  .action(async () => {
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Examples:
+  $ hypermem agent list
+  $ hypermem agent list --json`)
+  .action(async (options) => {
     try {
       const client = getHelixClient();
       const agents = await getAllAgents(client);
 
       if (agents.length === 0) {
-        console.log('No agents found');
+        output({ agents: [], count: 0 }, options.json, () => {
+          formatNoneFound('agents');
+        });
         return;
       }
 
-      console.log(`Found ${agents.length} agents:\n`);
-
-      for (const agent of agents) {
-        console.log(`${agent.name} (${agent.model})`);
-        if (agent.function) console.log(`  function: ${agent.function}`);
-        console.log(`  id: ${agent.id}`);
-        console.log();
-      }
+      output({ agents, count: agents.length }, options.json, () => {
+        formatAgentList(agents);
+      });
     } catch (error) {
-      logger.error(error, 'Failed to list agents');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to list agents');
     }
   });
 
@@ -69,24 +73,25 @@ agentCommand
   .command('get')
   .description('Get an agent by ID')
   .argument('<id>', 'Agent ID')
-  .action(async (id: string) => {
+  .option('--json', 'Output as JSON')
+  .addHelpText('after', `
+Examples:
+  $ hypermem agent get 1f0f0ed5-4486-6187-a1a5-010203040506
+  $ hypermem agent get 1f0f0ed5-4486-6187-a1a5-010203040506 --json`)
+  .action(async (id: string, options) => {
     try {
       const client = getHelixClient();
       const agent = await getAgent(client, id);
 
       if (!agent) {
-        console.log(`Agent not found: ${id}`);
+        output({ error: 'not_found', id }, options.json, () => {
+          formatNotFound('Agent', id);
+        });
         return;
       }
 
-      console.log(`Agent:`);
-      console.log(`  id: ${agent.id}`);
-      console.log(`  name: ${agent.name}`);
-      console.log(`  model: ${agent.model}`);
-      if (agent.function) console.log(`  function: ${agent.function}`);
+      output(agent, options.json, (a) => formatAgentSingle(a, 'Agent'));
     } catch (error) {
-      logger.error(error, 'Failed to get agent');
-      console.error('Error:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      handleError(error, 'Failed to get agent');
     }
   });
