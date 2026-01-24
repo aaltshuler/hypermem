@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Hyper-Memory is an agentic memory framework CLI for coding agents, business agents, and personal assistants. It stores curated, queryable memories (MEMs) in a HelixDB graph database with vector search capabilities.
 
+## Installation
+
+```bash
+npm install -g hypermem
+```
+
 ## Commands
 
 ```bash
@@ -15,17 +21,20 @@ npm run build              # Compile TypeScript to dist/
 npm run typecheck          # Type check without emitting
 npm run seed               # Seed database with sample data
 
-# CLI usage (after build or via npm run start)
+# CLI usage
 hypermem add "statement"   # Add a memory
 hypermem search "query"    # Vector search memories
-hypermem list              # List all memories
-hypermem delete <id>       # Delete a memory
+hypermem list              # List all ACTIVE memories
+hypermem list rules        # List active rules (aliases: decisions, problems, traits, etc.)
+hypermem forget <id>       # Permanently delete a memory
+hypermem dim <id>          # Soft delete (hide from default queries)
+hypermem undim <id>        # Restore a dimmed memory
 hypermem object add        # Add an object entity
 hypermem context add       # Add a context
 hypermem agent add         # Add an agent
 hypermem link about        # Link mem to object
-hypermem reality-check     # Validate memories
-hypermem init              # Initialize/setup
+hypermem reality-check     # Current time and active rules
+hypermem onboard           # Quick start guide for agents
 ```
 
 ## Required Environment Variables
@@ -39,7 +48,7 @@ hypermem init              # Initialize/setup
 
 The system uses a graph-based ontology with these node types:
 
-- **Mem** - Core memory unit with type (Decision, Problem, Rule, BestPractice, Convention, AntiPattern, Trait, Preference, Causal, Version), state (FACT/ASSUMPTION), confidence, and status (ACTIVE/SUPERSEDED/CONTESTED/ARCHIVED)
+- **Mem** - Core memory unit with type (Decision, Problem, Rule, BestPractice, Convention, AntiPattern, Trait, Preference, Causal, Version), state (FACT/ASSUMPTION), confidence, and status (ACTIVE/SUPERSEDED/CONTESTED/DIMMED)
 - **Object** - Things memories are about (Language, Framework, Lib, Tool, etc.)
 - **Context** - Where memories apply (Org, Project)
 - **Agent** - AI agent instances that propose memories
@@ -76,7 +85,7 @@ Edges connect nodes: About, InContext, ProposedByAgent, VersionOf, HasEvidence, 
 Configure in `src/ai/client.ts`. Always validate latest versions of libraries and models:
 
 ```bash
-hypermem list --type Version    # List all version mems
+hypermem list versions          # List active Version mems
 hypermem search "GPT version"   # Search for specific library
 ```
 

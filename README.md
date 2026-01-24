@@ -24,8 +24,7 @@ Stale memory is dead memory. Hypermem validates facts, hydrates assumptions, not
 ## Installation
 
 ```bash
-npm install
-npm run build
+npm install -g hypermem
 ```
 
 ## Configuration
@@ -50,9 +49,10 @@ hypermem onboard
 # Search memories
 hypermem search "state management"
 
-# List by type
-hypermem list --type Rule
-hypermem list --type Version
+# List by type (using aliases)
+hypermem list rules
+hypermem list versions
+hypermem list conventions
 
 # Add a memory
 hypermem add "Use pnpm over npm" --type Convention --tags "tooling"
@@ -64,9 +64,12 @@ hypermem add "Use pnpm over npm" --type Convention --tags "tooling"
 
 ```bash
 hypermem add <statement>     # Add a memory
-hypermem search <query>      # Vector search
-hypermem list                # List all (with filters)
-hypermem delete <id>         # Delete by ID
+hypermem search <query>      # Vector search (all statuses)
+hypermem list                # List ACTIVE memories
+hypermem list rules          # Aliases: decisions, problems, traits, conventions, etc.
+hypermem forget <id>         # Permanently delete
+hypermem dim <id>            # Soft delete (hide from default queries)
+hypermem undim <id>          # Restore a dimmed memory
 hypermem validate <id>       # Mark as validated
 ```
 
