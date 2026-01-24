@@ -22,7 +22,7 @@ const program = new Command();
 program
   .name('hypermem')
   .description('Agentic memory framework CLI')
-  .version('0.3.0');
+  .version('0.3.1');
 
 // MEM commands
 program.addCommand(addCommand);
