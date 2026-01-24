@@ -28,10 +28,10 @@ export const realityCheckCommand = new Command('reality-check')
 
     // Print date/time box
     console.log();
-    console.log('╔' + '═'.repeat(innerWidth) + '╗');
-    console.log('║' + pad(dateStr) + '║');
-    console.log('║' + pad(timeStr) + '║');
-    console.log('╚' + '═'.repeat(innerWidth) + '╝');
+    console.log('╭' + '─'.repeat(innerWidth) + '╮');
+    console.log('│' + pad(dateStr) + '│');
+    console.log('│' + pad(timeStr) + '│');
+    console.log('╰' + '─'.repeat(innerWidth) + '╯');
     console.log();
 
     // Fetch rules (get all mems and filter - getMemsByType has single-result bug)

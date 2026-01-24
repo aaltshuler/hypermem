@@ -25,7 +25,7 @@ export const MemStatusEnum = z.enum([
   'ACTIVE',
   'SUPERSEDED',
   'CONTESTED',
-  'ARCHIVED',
+  'DIMMED',
 ]);
 
 export const ObjectTypeEnum = z.enum([

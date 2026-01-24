@@ -12,7 +12,8 @@ export function handleError(error: unknown, context: string): never {
 }
 
 /**
- * Output data in JSON or human-readable format.
+ * Output data in JSON or formatted text.
+ * Formatters use chalk which auto-detects TTY for colors.
  */
 export function output<T>(
   data: T,

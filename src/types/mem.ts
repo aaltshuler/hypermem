@@ -16,7 +16,7 @@ export type MemState = 'FACT' | 'ASSUMPTION';
 
 export type Confidence = 'low' | 'med' | 'high';
 
-export type MemStatus = 'ACTIVE' | 'SUPERSEDED' | 'CONTESTED' | 'ARCHIVED';
+export type MemStatus = 'ACTIVE' | 'SUPERSEDED' | 'CONTESTED' | 'DIMMED';
 
 export type ActorType = 'human' | 'agent';
 

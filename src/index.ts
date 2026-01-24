@@ -5,7 +5,8 @@ import { Command } from 'commander';
 import { addCommand } from './commands/add.js';
 import { searchCommand } from './commands/search.js';
 import { listCommand } from './commands/list.js';
-import { deleteCommand } from './commands/delete.js';
+import { forgetCommand } from './commands/forget.js';
+import { dimCommand, undimCommand } from './commands/dim.js';
 import { objectCommand } from './commands/object.js';
 import { linkCommand } from './commands/link.js';
 import { contextCommand } from './commands/context.js';
@@ -27,7 +28,9 @@ program
 program.addCommand(addCommand);
 program.addCommand(searchCommand);
 program.addCommand(listCommand);
-program.addCommand(deleteCommand);
+program.addCommand(forgetCommand);
+program.addCommand(dimCommand);
+program.addCommand(undimCommand);
 
 // Entity commands
 program.addCommand(objectCommand);

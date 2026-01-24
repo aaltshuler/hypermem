@@ -3,9 +3,21 @@
   "version": "0.3.0",
   "description": "Agentic memory framework for coding agents, business agents, and personal assistants",
   "type": "module",
+  "license": "MIT",
+  "author": "Andrew Altshuler",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaltshuler/hypermem.git"
+  },
+  "homepage": "https://hypermem.io",
+  "bugs": {
+    "url": "https://github.com/aaltshuler/hypermem/issues"
+  },
+  "keywords": ["cli", "memory", "ai", "agent", "llm", "knowledge-base"],
   "bin": {
     "hypermem": "./dist/index.js"
   },
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "start": "tsx src/index.ts",
@@ -19,6 +31,7 @@
     "@ai-sdk/openai": "^3.0.2",
     "@chonkiejs/core": "^0.0.5",
     "ai": "^6.0.6",
+    "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "helix-ts": "^1.0.8",

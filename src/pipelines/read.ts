@@ -13,6 +13,7 @@ import { logger } from '../utils/logger.js';
 export interface SearchOptions {
   limit?: number;
   status?: MemStatus;
+  all?: boolean; // Include DIMMED memories
 }
 
 export interface SearchResult {
@@ -25,7 +26,7 @@ export async function readPipeline(
   query: string,
   options: SearchOptions = {}
 ): Promise<SearchResult[]> {
-  const { limit = 10, status } = options;
+  const { limit = 10, status, all = false } = options;
   const client = getHelixClient();
 
   // Step 1: Generate query embedding
@@ -46,13 +47,15 @@ export async function readPipeline(
   const allMems = await getAllMems(client);
   const memMap = new Map(allMems.map((m) => [m.id, m]));
 
-  // Step 4: Join vector results with mems (filter by status if provided)
+  // Step 4: Join vector results with mems (filter by status)
   const results: SearchResult[] = [];
   for (const vr of vectorResults) {
     const mem = memMap.get(vr.memId);
     if (mem) {
-      // Post-filter by status if specified
+      // Filter by specific status if provided
       if (status && mem.status !== status) continue;
+      // Exclude DIMMED by default unless --all is set
+      if (!all && !status && mem.status === 'DIMMED') continue;
       results.push({
         mem,
         similarity: vr.similarity,
@@ -73,16 +76,17 @@ export async function readPipeline(
 export interface ListOptions {
   mem_type?: MemType;
   status?: MemStatus;
+  all?: boolean; // Include DIMMED memories
 }
 
 export async function listPipeline(
   options: ListOptions = {}
 ): Promise<Mem[]> {
-  const { mem_type, status } = options;
+  const { mem_type, status, all = false } = options;
   const client = getHelixClient();
 
   // Get all mems and filter client-side (getMemsByType/Status have single-result bug)
-  logger.info({ mem_type, status }, 'Listing mems');
+  logger.info({ mem_type, status, all }, 'Listing mems');
   const allMems = await getAllMems(client);
 
   let filtered = allMems;
@@ -91,6 +95,9 @@ export async function listPipeline(
   }
   if (status) {
     filtered = filtered.filter(m => m.status === status);
+  } else if (!all) {
+    // Exclude DIMMED by default unless --all is set
+    filtered = filtered.filter(m => m.status !== 'DIMMED');
   }
 
   logger.info({ count: filtered.length }, 'List complete');
