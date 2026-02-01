@@ -47,15 +47,17 @@ npx tsx scripts/seed-examples.ts
 hypermem onboard
 
 # Search memories
-hypermem search "state management"
+hypermem search "GPT"              # Text search (fast)
+hypermem vsearch "state management" # Vector search (semantic)
 
 # List by type (using aliases)
 hypermem list rules
 hypermem list versions
-hypermem list conventions
+hypermem list lexicons
 
 # Add a memory
-hypermem add "Use pnpm over npm" --type Convention --tags "tooling"
+hypermem add "Use pnpm over npm" --type rule --tags "tooling"
+hypermem add "Batch changes, build at end" --type rule --reality-check
 ```
 
 ## Commands
@@ -64,9 +66,10 @@ hypermem add "Use pnpm over npm" --type Convention --tags "tooling"
 
 ```bash
 hypermem add <statement>     # Add a memory
-hypermem search <query>      # Vector search (all statuses)
+hypermem search <query>      # Text search (fast, substring match)
+hypermem vsearch <query>     # Vector search (semantic similarity)
 hypermem list                # List ACTIVE memories
-hypermem list rules          # Aliases: decisions, problems, traits, conventions, etc.
+hypermem list rules          # Aliases: decisions, problems, traits, lexicons, versions
 hypermem forget <id>         # Permanently delete
 hypermem dim <id>            # Soft delete (hide from default queries)
 hypermem undim <id>          # Restore a dimmed memory
@@ -76,8 +79,8 @@ hypermem validate <id>       # Mark as validated
 ### Entities
 
 ```bash
-hypermem object add <name>   # Add object (Lib, Tool, Model, etc.)
-hypermem context add <name>  # Add context (Project, Org)
+hypermem object add <name>   # Add object (Lib, Tool, LLM, etc.)
+hypermem context add <name>  # Add context (Project, Org, Domain, Stage)
 hypermem agent add <name>    # Add agent instance
 hypermem trace add <summary> # Add trace record
 hypermem reference add <title>  # Add external reference
@@ -89,7 +92,8 @@ hypermem reference add <title>  # Add external reference
 hypermem link about <memId> <objectId>      # What it's about
 hypermem link context <memId> <contextId>   # Where it applies
 hypermem link supersedes <new> <old>        # Replace outdated
-hypermem link versionof <memId> <objectId>  # Version -> Model
+hypermem link versionof <memId> <objectId>  # Version -> LLM
+hypermem link partof <objectId> <contextId> # Object -> Domain
 ```
 
 ### Utilities
@@ -104,16 +108,13 @@ hypermem --help         # Full command list
 
 | Type | Purpose |
 |------|---------|
-| Rule | Must follow (constraints) |
-| AntiPattern | Must avoid (learned mistakes) |
+| Rule | Must follow (constraints, things to avoid) |
 | BestPractice | Should follow (recommendations) |
-| Convention | Team/project standard |
 | Decision | Architecture/tech choice |
-| Version | Library/model version info |
 | Problem | Known issue |
-| Preference | User likes/dislikes |
+| Lexicon | High-bandwidth shorthand vocabulary |
 | Trait | User behavior patterns |
-| Causal | Cause-effect relationships |
+| Version | Library/model version info |
 
 ## Architecture
 

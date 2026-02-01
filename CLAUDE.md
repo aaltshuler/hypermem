@@ -22,18 +22,20 @@ npm run typecheck          # Type check without emitting
 npm run seed               # Seed database with sample data
 
 # CLI usage
-hypermem add "statement"   # Add a memory
-hypermem search "query"    # Vector search memories
+hypermem add "statement"   # Add a memory (use --reality-check for quick reminders)
+hypermem search "query"    # Text search (fast, substring match)
+hypermem vsearch "query"   # Vector search (semantic similarity)
 hypermem list              # List all ACTIVE memories
-hypermem list rules        # List active rules (aliases: decisions, problems, traits, etc.)
+hypermem list rules        # Aliases: decisions, problems, traits, lexicons, versions
 hypermem forget <id>       # Permanently delete a memory
 hypermem dim <id>          # Soft delete (hide from default queries)
 hypermem undim <id>        # Restore a dimmed memory
 hypermem object add        # Add an object entity
-hypermem context add       # Add a context
+hypermem context add       # Add a context (org, project, domain, stage)
 hypermem agent add         # Add an agent
 hypermem link about        # Link mem to object
-hypermem reality-check     # Current time and active rules
+hypermem link partof       # Link object to domain
+hypermem reality-check     # Current time and flagged mems
 hypermem onboard           # Quick start guide for agents
 ```
 
@@ -44,18 +46,20 @@ hypermem onboard           # Quick start guide for agents
 
 ## Architecture
 
-### Core Ontology (V1)
+### Core Ontology
 
 The system uses a graph-based ontology with these node types:
 
-- **Mem** - Core memory unit with type (Decision, Problem, Rule, BestPractice, Convention, AntiPattern, Trait, Preference, Causal, Version), state (FACT/ASSUMPTION), confidence, and status (ACTIVE/SUPERSEDED/CONTESTED/DIMMED)
-- **Object** - Things memories are about (Language, Framework, Lib, Tool, etc.)
-- **Context** - Where memories apply (Org, Project)
+- **Mem** - Core memory unit with type (Decision, Problem, Rule, BestPractice, Lexicon, Trait, Version), state (fact/assumption), confidence, status (active/superseded/contested/dimmed), and reality_check flag
+- **Object** - Things memories are about (Language, Framework, Lib, Tool, LLM, API, etc.)
+- **Context** - Where memories apply (Org, Project, Domain, Stage)
 - **Agent** - AI agent instances that propose memories
 - **Trace** - Internal records (SessionLog, Event, Snapshot, CheckResult)
 - **Reference** - External sources (url, doc, commit, pr, adr, ticket)
 
-Edges connect nodes: About, InContext, ProposedByAgent, VersionOf, HasEvidence, Supersedes, Contradicts, DependsOn, HasCause, HasEffect, Related
+Edges connect nodes: About, AboutRef, InContext, ProposedByAgent, VersionOf, PartOf, HasEvidence, HasEvidenceRef, Supersedes, Contradicts, DependsOn, Causal, Related
+
+All edges use UpsertE with timestamps (idempotent, no duplicates). Nodes use UPDATE for property changes.
 
 ### Key Directories
 
@@ -75,10 +79,9 @@ Edges connect nodes: About, InContext, ProposedByAgent, VersionOf, HasEvidence, 
 4. Store mem node and vector embedding in HelixDB
 
 **Read Pipeline** (`src/pipelines/read.ts`):
-1. Generate query embedding
-2. Vector search MemEmbedding (fetches 2x limit for post-filtering)
-3. Fetch all mems and join with vector results
-4. Filter by status, sort by similarity score
+- Text search: substring match on statement/title/notes (fast, no API)
+- Vector search: generate embedding, search MemEmbedding, join with mems
+- Both filter by status, sort by relevance
 
 ### AI Models
 
@@ -101,4 +104,4 @@ The project uses HelixDB (helix-ts npm package) as a graph database with vector 
 HelixDB notes:
 - Use UPDATE for property changes (preserves node ID and edges)
 - Use UpsertE for idempotent edge creation (avoids duplicates)
-- Tags/actors stored as JSON strings, parsed on read
+- Tags stored as JSON strings, parsed on read
