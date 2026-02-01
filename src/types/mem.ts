@@ -1,24 +1,19 @@
 // MEM - Core memory unit (curated, queryable)
 
 export type MemType =
-  | 'Decision'
-  | 'Problem'
-  | 'Rule'
-  | 'BestPractice'
-  | 'Convention'
-  | 'AntiPattern'
-  | 'Trait'
-  | 'Preference'
-  | 'Causal'
-  | 'Version';
+  | 'decision'
+  | 'problem'
+  | 'rule'
+  | 'bestPractice'
+  | 'lexicon'
+  | 'trait'
+  | 'version';
 
-export type MemState = 'FACT' | 'ASSUMPTION';
+export type MemState = 'fact' | 'assumption';
 
 export type Confidence = 'low' | 'med' | 'high';
 
-export type MemStatus = 'ACTIVE' | 'SUPERSEDED' | 'CONTESTED' | 'DIMMED';
-
-export type ActorType = 'human' | 'agent';
+export type MemStatus = 'active' | 'superseded' | 'contested' | 'dimmed';
 
 export interface Mem {
   id: string;
@@ -34,7 +29,7 @@ export interface Mem {
   valid_to?: string;
   last_validated_at?: string;
   created_at: string;
-  actors?: ActorType[]; // Who contributed: human, agent, or both
+  reality_check?: boolean; // If true, included in reality-check output
 }
 
 // Input type for creating a new Mem
@@ -49,5 +44,5 @@ export interface MemInput {
   notes?: string;
   valid_from?: string;
   valid_to?: string;
-  actors?: ActorType[];
+  reality_check?: boolean; // If true, included in reality-check output
 }

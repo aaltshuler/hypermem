@@ -1,18 +1,18 @@
 // OBJECT - Things memories are about
 
 export type ObjectType =
-  | 'Language'
-  | 'Database'
-  | 'Framework'
-  | 'Lib'
-  | 'Tool'
-  | 'API'
-  | 'Model'
-  | 'Component'
-  | 'Service'
-  | 'Font'
-  | 'Stack'
-  | 'Template';
+  | 'language'
+  | 'database'
+  | 'framework'
+  | 'lib'
+  | 'tool'
+  | 'api'
+  | 'llm'
+  | 'component'
+  | 'service'
+  | 'font'
+  | 'stack'
+  | 'template';
 
 export interface ObjectEntity {
   id: string;

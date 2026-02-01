@@ -18,7 +18,7 @@ QUERY addMem(
     valid_from: Date,
     valid_to: Date,
     created_at: Date,
-    actors: String
+    reality_check: Boolean
 ) =>
     mem <- AddN<Mem>({
         mem_type: mem_type,
@@ -33,7 +33,7 @@ QUERY addMem(
         valid_to: valid_to,
         last_validated_at: created_at,
         created_at: created_at,
-        actors: actors
+        reality_check: reality_check
     })
     RETURN mem
 
@@ -59,6 +59,10 @@ QUERY deleteMem(id: ID) =>
 
 QUERY updateMemLastValidated(id: ID, last_validated_at: Date) =>
     mem <- N<Mem>(id)::UPDATE({ last_validated_at: last_validated_at })
+    RETURN mem
+
+QUERY updateMemStatus(id: ID, status: String) =>
+    mem <- N<Mem>(id)::UPDATE({ status: status })
     RETURN mem
 
 QUERY getContextByName(name: String) =>
@@ -232,63 +236,120 @@ QUERY getReferencesByType(ref_type: String) =>
     RETURN references
 
 // ============================================
-// EDGE OPERATIONS - Mem to Entity
+// EDGE OPERATIONS - Mem to Entity (Idempotent)
 // ============================================
 
-QUERY linkAbout(memId: ID, objectId: ID) =>
-    edge <- AddE<About>::From(memId)::To(objectId)
+QUERY linkAbout(memId: ID, objectId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    obj <- N<Object>(objectId)
+    existing <- E<About>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(obj)
     RETURN edge
 
-QUERY linkInContext(memId: ID, contextId: ID) =>
-    edge <- AddE<InContext>::From(memId)::To(contextId)
+QUERY linkAboutRef(memId: ID, refId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    refNode <- N<Reference>(refId)
+    existing <- E<AboutRef>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(refNode)
     RETURN edge
 
-QUERY linkProposedByAgent(memId: ID, agentId: ID) =>
-    edge <- AddE<ProposedByAgent>::From(memId)::To(agentId)
+QUERY linkInContext(memId: ID, contextId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    ctx <- N<Context>(contextId)
+    existing <- E<InContext>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(ctx)
     RETURN edge
 
-QUERY linkVersionOf(memId: ID, objectId: ID) =>
-    edge <- AddE<VersionOf>::From(memId)::To(objectId)
+QUERY linkProposedByAgent(memId: ID, agentId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    agent <- N<Agent>(agentId)
+    existing <- E<ProposedByAgent>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(agent)
+    RETURN edge
+
+QUERY linkVersionOf(memId: ID, objectId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    obj <- N<Object>(objectId)
+    existing <- E<VersionOf>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(obj)
     RETURN edge
 
 // ============================================
-// EDGE OPERATIONS - Mem to Evidence
+// EDGE OPERATIONS - Object to Context (Idempotent)
 // ============================================
 
-QUERY linkHasEvidence(memId: ID, traceId: ID) =>
-    edge <- AddE<HasEvidence>::From(memId)::To(traceId)
+QUERY linkPartOf(objectId: ID, contextId: ID, timestamp: Date) =>
+    obj <- N<Object>(objectId)
+    ctx <- N<Context>(contextId)
+    existing <- E<PartOf>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(obj)::To(ctx)
     RETURN edge
 
-QUERY linkHasEvidenceRef(memId: ID, refId: ID) =>
-    edge <- AddE<HasEvidenceRef>::From(memId)::To(refId)
+QUERY getObjectDomains(objectId: ID) =>
+    obj <- N<Object>(objectId)
+    domains <- obj::Out<PartOf>
+    RETURN domains
+
+QUERY getDomainObjects(contextId: ID) =>
+    ctx <- N<Context>(contextId)
+    objs <- ctx::In<PartOf>
+    RETURN objs
+
+// ============================================
+// EDGE OPERATIONS - Mem to Evidence (Idempotent)
+// ============================================
+
+QUERY linkHasEvidence(memId: ID, traceId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    trace <- N<Trace>(traceId)
+    existing <- E<HasEvidence>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(trace)
+    RETURN edge
+
+QUERY linkHasEvidenceRef(memId: ID, refId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    refNode <- N<Reference>(refId)
+    existing <- E<HasEvidenceRef>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(refNode)
     RETURN edge
 
 // ============================================
-// EDGE OPERATIONS - Mem to Mem
+// EDGE OPERATIONS - Mem to Mem (Idempotent)
 // ============================================
 
-QUERY linkSupersedes(newMemId: ID, oldMemId: ID, reason: String) =>
-    edge <- AddE<Supersedes>({reason: reason})::From(newMemId)::To(oldMemId)
+QUERY linkSupersedes(newMemId: ID, oldMemId: ID, reason: String, timestamp: Date) =>
+    newMem <- N<Mem>(newMemId)
+    oldMem <- N<Mem>(oldMemId)
+    existing <- E<Supersedes>
+    edge <- existing::UpsertE({reason: reason, timestamp: timestamp})::From(newMem)::To(oldMem)
     RETURN edge
 
-QUERY linkContradicts(memId1: ID, memId2: ID) =>
-    edge <- AddE<Contradicts>::From(memId1)::To(memId2)
+QUERY linkContradicts(memId1: ID, memId2: ID, timestamp: Date) =>
+    mem1 <- N<Mem>(memId1)
+    mem2 <- N<Mem>(memId2)
+    existing <- E<Contradicts>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem1)::To(mem2)
     RETURN edge
 
-QUERY linkDependsOn(memId: ID, dependsOnMemId: ID) =>
-    edge <- AddE<DependsOn>::From(memId)::To(dependsOnMemId)
+QUERY linkDependsOn(memId: ID, dependsOnMemId: ID, timestamp: Date) =>
+    mem <- N<Mem>(memId)
+    depMem <- N<Mem>(dependsOnMemId)
+    existing <- E<DependsOn>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem)::To(depMem)
     RETURN edge
 
-QUERY linkHasCause(effectMemId: ID, causeMemId: ID) =>
-    edge <- AddE<HasCause>::From(effectMemId)::To(causeMemId)
+QUERY linkCausal(causeMemId: ID, effectMemId: ID, description: String, timestamp: Date) =>
+    causeMem <- N<Mem>(causeMemId)
+    effectMem <- N<Mem>(effectMemId)
+    existing <- E<Causal>
+    edge <- existing::UpsertE({description: description, timestamp: timestamp})::From(causeMem)::To(effectMem)
     RETURN edge
 
-QUERY linkHasEffect(causeMemId: ID, effectMemId: ID) =>
-    edge <- AddE<HasEffect>::From(causeMemId)::To(effectMemId)
-    RETURN edge
-
-QUERY linkRelated(memId1: ID, memId2: ID) =>
-    edge <- AddE<Related>::From(memId1)::To(memId2)
+QUERY linkRelated(memId1: ID, memId2: ID, timestamp: Date) =>
+    mem1 <- N<Mem>(memId1)
+    mem2 <- N<Mem>(memId2)
+    existing <- E<Related>
+    edge <- existing::UpsertE({timestamp: timestamp})::From(mem1)::To(mem2)
     RETURN edge
 
 // ============================================

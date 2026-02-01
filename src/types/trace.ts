@@ -1,6 +1,6 @@
 // TRACE - Internal records produced by the system
 
-export type TraceType = 'SessionLog' | 'Event' | 'Snapshot' | 'CheckResult';
+export type TraceType = 'sessionlog' | 'event' | 'snapshot' | 'checkresult';
 
 export interface Trace {
   id: string;

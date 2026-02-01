@@ -11,7 +11,7 @@ import { handleError, output, confirmDelete } from '../utils/cli.js';
 import { formatContextSingle, formatContextList, formatNoneFound } from '../utils/format.js';
 
 export const contextCommand = new Command('context')
-  .description('Manage CONTEXT entities (Org, Project)');
+  .description('Manage CONTEXT entities (Org, Project, Domain, Stage)');
 
 contextCommand
   .command('add')
@@ -26,7 +26,9 @@ Choices:
 
 Examples:
   $ hypermem context add my-project -t Project -d "Main web app"
-  $ hypermem context add Acme Corp -t Org -d "Client organization"`)
+  $ hypermem context add Acme Corp -t Org -d "Client organization"
+  $ hypermem context add Frontend -t Domain -d "Frontend development"
+  $ hypermem context add Production -t Stage -d "Production environment"`)
   .action(async (name: string, options) => {
     try {
       const input = validate(ContextInputSchema, {

@@ -98,6 +98,7 @@ The project uses HelixDB (helix-ts npm package) as a graph database with vector 
 - Client wrapper in `src/db/client.ts` handles type conversion
 - Vector search returns distance scores; convert to similarity with `1 - score`
 
-HelixDB limitations:
-- No native UPDATE - use delete + add pattern (see `updateMemStatus` in client.ts)
+HelixDB notes:
+- Use UPDATE for property changes (preserves node ID and edges)
+- Use UpsertE for idempotent edge creation (avoids duplicates)
 - Tags/actors stored as JSON strings, parsed on read

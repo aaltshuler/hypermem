@@ -7,7 +7,7 @@ export type ReferenceType =
   | 'pr'
   | 'adr'
   | 'ticket'
-  | 'meeting_note';
+  | 'meetingNote';
 
 export interface Reference {
   id: string;

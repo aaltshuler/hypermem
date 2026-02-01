@@ -11,7 +11,7 @@ export const onboardCommand = new Command('onboard')
 
       // Fetch stats
       const allMems = await getAllMems(client);
-      const activeMems = allMems.filter((m) => m.status === 'ACTIVE');
+      const activeMems = allMems.filter((m) => m.status === 'active');
       const objects = await getAllObjects(client);
       const contexts = await getAllContexts(client);
 
@@ -146,16 +146,13 @@ MEMORY SNAPSHOT
 
       // Print mem breakdown
       const memTypeOrder = [
-        'Rule',
-        'AntiPattern',
-        'BestPractice',
-        'Convention',
-        'Decision',
-        'Version',
-        'Problem',
-        'Preference',
-        'Trait',
-        'Causal',
+        'rule',
+        'bestPractice',
+        'decision',
+        'version',
+        'problem',
+        'trait',
+        'lexicon',
       ];
       const memBreakdown = memTypeOrder
         .filter((t) => memsByType[t])

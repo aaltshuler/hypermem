@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import {
   getHelixClient,
   linkAbout,
+  linkAboutRef,
   linkInContext,
   linkProposedByAgent,
   linkVersionOf,
@@ -10,8 +11,7 @@ import {
   linkSupersedes,
   linkContradicts,
   linkDependsOn,
-  linkHasCause,
-  linkHasEffect,
+  linkCausal,
   linkRelated,
   updateMemStatus,
 } from '../db/client.js';
@@ -38,6 +38,24 @@ Example:
       const client = getHelixClient();
       await linkAbout(client, memId, objectId);
       console.log(`Linked MEM ${memId} -> ABOUT -> Object ${objectId}`);
+    } catch (error) {
+      handleError(error, 'Failed to create link');
+    }
+  });
+
+linkCommand
+  .command('aboutref')
+  .description('Link a MEM to a REFERENCE (what external source the memory is about)')
+  .argument('<memId>', 'Memory ID')
+  .argument('<refId>', 'Reference ID')
+  .addHelpText('after', `
+Example:
+  $ hypermem link aboutref abc123 ref456  # Link mem about a URL/doc`)
+  .action(async (memId: string, refId: string) => {
+    try {
+      const client = getHelixClient();
+      await linkAboutRef(client, memId, refId);
+      console.log(`Linked MEM ${memId} -> ABOUT_REF -> Reference ${refId}`);
     } catch (error) {
       handleError(error, 'Failed to create link');
     }
@@ -136,7 +154,7 @@ Example:
       // Create supersedes edge
       await linkSupersedes(client, newMemId, oldMemId, options.reason);
       // Update old mem status to SUPERSEDED
-      await updateMemStatus(client, oldMemId, 'SUPERSEDED');
+      await updateMemStatus(client, oldMemId, 'superseded');
       console.log(`Linked MEM ${newMemId} -> SUPERSEDES -> MEM ${oldMemId}`);
       console.log(`Updated MEM ${oldMemId} status to SUPERSEDED`);
     } catch (error) {
@@ -154,7 +172,7 @@ linkCommand
       const client = getHelixClient();
       await linkContradicts(client, memId1, memId2);
       // Mark at least one as contested
-      await updateMemStatus(client, memId2, 'CONTESTED');
+      await updateMemStatus(client, memId2, 'contested');
       console.log(`Linked MEM ${memId1} -> CONTRADICTS -> MEM ${memId2}`);
       console.log(`Updated MEM ${memId2} status to CONTESTED`);
     } catch (error) {
@@ -178,32 +196,21 @@ linkCommand
   });
 
 linkCommand
-  .command('cause')
-  .description('Link an effect MEM to its cause MEM (for Causal types)')
-  .argument('<effectMemId>', 'Effect memory ID')
-  .argument('<causeMemId>', 'Cause memory ID')
-  .action(async (effectMemId: string, causeMemId: string) => {
-    try {
-      const client = getHelixClient();
-      await linkHasCause(client, effectMemId, causeMemId);
-      console.log(`Linked MEM ${effectMemId} -> HAS_CAUSE -> MEM ${causeMemId}`);
-    } catch (error) {
-      handleError(error, 'Failed to create cause link');
-    }
-  });
-
-linkCommand
-  .command('effect')
-  .description('Link a cause MEM to its effect MEM (for Causal types)')
+  .command('causal')
+  .description('Link a cause MEM to its effect MEM')
   .argument('<causeMemId>', 'Cause memory ID')
   .argument('<effectMemId>', 'Effect memory ID')
-  .action(async (causeMemId: string, effectMemId: string) => {
+  .requiredOption('-d, --description <description>', 'Description of the cause-effect relationship')
+  .addHelpText('after', `
+Example:
+  $ hypermem link causal cause123 effect456 -d "Memory leak caused refactor"`)
+  .action(async (causeMemId: string, effectMemId: string, options) => {
     try {
       const client = getHelixClient();
-      await linkHasEffect(client, causeMemId, effectMemId);
-      console.log(`Linked MEM ${causeMemId} -> HAS_EFFECT -> MEM ${effectMemId}`);
+      await linkCausal(client, causeMemId, effectMemId, options.description);
+      console.log(`Linked MEM ${causeMemId} -> CAUSAL -> MEM ${effectMemId}`);
     } catch (error) {
-      handleError(error, 'Failed to create effect link');
+      handleError(error, 'Failed to create causal link');
     }
   });
 

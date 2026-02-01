@@ -5,7 +5,6 @@ import type {
   MemState,
   Confidence,
   MemStatus,
-  ActorType,
   ObjectEntity,
   ObjectType,
   Context,
@@ -63,7 +62,7 @@ export interface AddMemParams {
   valid_from?: string;
   valid_to?: string;
   created_at: string;
-  actors?: ActorType[];
+  reality_check?: boolean;
 }
 
 export async function addMem(
@@ -83,16 +82,13 @@ export async function addMem(
     valid_from: normalizeDate(params.valid_from || params.created_at),
     valid_to: normalizeDate(params.valid_to || params.created_at),
     created_at: createdAt,
-    actors: JSON.stringify(params.actors || []),
+    reality_check: params.reality_check ?? false,
   });
   const data = (result as { mem?: Mem }).mem;
   if (!data) throw new Error('Failed to add mem');
-  // Parse tags and actors back to arrays
+  // Parse tags back to array
   if (typeof data.tags === 'string') {
     data.tags = data.tags ? JSON.parse(data.tags) : [];
-  }
-  if (typeof data.actors === 'string') {
-    data.actors = data.actors ? JSON.parse(data.actors) : [];
   }
   return data;
 }
@@ -107,9 +103,6 @@ export async function getMem(
   if (typeof data.tags === 'string') {
     data.tags = data.tags ? JSON.parse(data.tags) : [];
   }
-  if (typeof data.actors === 'string') {
-    data.actors = data.actors ? JSON.parse(data.actors) : [];
-  }
   return data;
 }
 
@@ -120,7 +113,6 @@ export async function getAllMems(client: HelixDBClient): Promise<Mem[]> {
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
-    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -134,7 +126,6 @@ export async function getMemsByType(
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
-    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -148,7 +139,6 @@ export async function getMemsByStatus(
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
-    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }
 
@@ -173,41 +163,28 @@ export async function updateMemLastValidated(
   if (typeof data.tags === 'string') {
     data.tags = data.tags ? JSON.parse(data.tags) : [];
   }
-  if (typeof data.actors === 'string') {
-    data.actors = data.actors ? JSON.parse(data.actors) : [];
+  return data;
+}
+
+// Helper to normalize mem data (parse JSON fields)
+function normalizeMemData(data: Mem): Mem {
+  if (typeof data.tags === 'string') {
+    data.tags = data.tags ? JSON.parse(data.tags) : [];
   }
   return data;
 }
 
-// Note: HelixQL doesn't support full updates. For status changes,
-// use delete + add pattern at application layer
+// Update mem status using native UPDATE (preserves ID and edges)
 export async function updateMemStatus(
   client: HelixDBClient,
   id: string,
   newStatus: MemStatus
 ): Promise<Mem> {
-  // Get existing mem
-  const existing = await getMem(client, id);
-  if (!existing) throw new Error(`Mem ${id} not found`);
+  const result = await client.query('updateMemStatus', { id, status: newStatus });
+  const data = (result as { mem?: Mem }).mem;
+  if (!data) throw new Error(`Failed to update mem ${id}`);
 
-  // Delete old
-  await deleteMem(client, id);
-
-  // Re-add with new status (ID will be different - this is a limitation)
-  return addMem(client, {
-    mem_type: existing.mem_type,
-    mem_state: existing.mem_state,
-    confidence: existing.confidence,
-    statement: existing.statement,
-    status: newStatus,
-    title: existing.title,
-    tags: existing.tags,
-    notes: existing.notes,
-    valid_from: existing.valid_from,
-    valid_to: existing.valid_to,
-    created_at: existing.created_at,
-    actors: existing.actors,
-  });
+  return normalizeMemData(data);
 }
 
 // ============================================
@@ -505,6 +482,14 @@ export async function linkAbout(
   await client.query('linkAbout', { memId, objectId });
 }
 
+export async function linkAboutRef(
+  client: HelixDBClient,
+  memId: string,
+  refId: string
+): Promise<void> {
+  await client.query('linkAboutRef', { memId, refId });
+}
+
 export async function linkInContext(
   client: HelixDBClient,
   memId: string,
@@ -527,6 +512,14 @@ export async function linkVersionOf(
   objectId: string
 ): Promise<void> {
   await client.query('linkVersionOf', { memId, objectId });
+}
+
+export async function linkPartOf(
+  client: HelixDBClient,
+  objectId: string,
+  contextId: string
+): Promise<void> {
+  await client.query('linkPartOf', { objectId, contextId });
 }
 
 export async function linkHasEvidence(
@@ -570,20 +563,13 @@ export async function linkDependsOn(
   await client.query('linkDependsOn', { memId, dependsOnMemId });
 }
 
-export async function linkHasCause(
-  client: HelixDBClient,
-  effectMemId: string,
-  causeMemId: string
-): Promise<void> {
-  await client.query('linkHasCause', { effectMemId, causeMemId });
-}
-
-export async function linkHasEffect(
+export async function linkCausal(
   client: HelixDBClient,
   causeMemId: string,
-  effectMemId: string
+  effectMemId: string,
+  description: string
 ): Promise<void> {
-  await client.query('linkHasEffect', { causeMemId, effectMemId });
+  await client.query('linkCausal', { causeMemId, effectMemId, description });
 }
 
 export async function linkRelated(
@@ -854,6 +840,5 @@ export async function getObjectVersions(
   return mems.map((m) => ({
     ...m,
     tags: typeof m.tags === 'string' ? (m.tags ? JSON.parse(m.tags) : []) : m.tags,
-    actors: typeof m.actors === 'string' ? (m.actors ? JSON.parse(m.actors) : []) : m.actors,
   }));
 }

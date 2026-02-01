@@ -5,53 +5,48 @@ import { z } from 'zod';
 // ============================================
 
 export const MemTypeEnum = z.enum([
-  'Decision',
-  'Problem',
-  'Rule',
-  'BestPractice',
-  'Convention',
-  'AntiPattern',
-  'Trait',
-  'Preference',
-  'Causal',
-  'Version',
+  'decision',
+  'problem',
+  'rule',
+  'bestPractice',
+  'lexicon',
+  'trait',
+  'version',
 ]);
 
-export const MemStateEnum = z.enum(['FACT', 'ASSUMPTION']);
+export const MemStateEnum = z.enum(['fact', 'assumption']);
 
 export const ConfidenceEnum = z.enum(['low', 'med', 'high']);
 
 export const MemStatusEnum = z.enum([
-  'ACTIVE',
-  'SUPERSEDED',
-  'CONTESTED',
-  'DIMMED',
+  'active',
+  'superseded',
+  'contested',
+  'dimmed',
 ]);
 
 export const ObjectTypeEnum = z.enum([
-  'Language',
-  'Database',
-  'Framework',
-  'Lib',
-  'Tool',
-  'API',
-  'Model',
-  'Component',
-  'Service',
-  'Font',
-  'Stack',
-  'Template',
+  'language',
+  'database',
+  'framework',
+  'lib',
+  'tool',
+  'api',
+  'llm',
+  'component',
+  'service',
+  'font',
+  'stack',
+  'template',
 ]);
 
-export const ContextTypeEnum = z.enum(['Org', 'Project']);
-
-export const ActorTypeEnum = z.enum(['human', 'agent']);
+export const ContextTypeEnum = z.enum(['org', 'project', 'domain', 'stage']);
 
 export const TraceTypeEnum = z.enum([
-  'SessionLog',
-  'Event',
-  'Snapshot',
-  'CheckResult',
+  'sessionlog',
+  'event',
+  'snapshot',
+  'checkresult',
 ]);
 
 export const ReferenceTypeEnum = z.enum([
@@ -61,7 +56,7 @@ export const ReferenceTypeEnum = z.enum([
   'pr',
   'adr',
   'ticket',
-  'meeting_note',
+  'meetingNote',
 ]);
 
 // ============================================
@@ -71,21 +66,21 @@ export const ReferenceTypeEnum = z.enum([
 export const MemInputSchema = z
   .object({
     mem_type: MemTypeEnum,
-    mem_state: MemStateEnum.default('FACT'),
+    mem_state: MemStateEnum.default('fact'),
     confidence: ConfidenceEnum.optional(),
     statement: z.string().min(1).max(4000),
-    status: MemStatusEnum.default('ACTIVE'),
+    status: MemStatusEnum.default('active'),
     title: z.string().max(200).optional(),
     tags: z.array(z.string()).optional(),
     notes: z.string().max(4000).optional(),
     valid_from: z.string().optional(),
     valid_to: z.string().optional(),
-    actors: z.array(ActorTypeEnum).optional(),
+    reality_check: z.boolean().optional(),
   })
   .refine(
     (data) => {
       // If ASSUMPTION, confidence is required
-      if (data.mem_state === 'ASSUMPTION' && !data.confidence) {
+      if (data.mem_state === 'assumption' && !data.confidence) {
         return false;
       }
       return true;

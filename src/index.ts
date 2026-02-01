@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import 'dotenv/config';
+import { createRequire } from 'module';
 import { Command } from 'commander';
 import { addCommand } from './commands/add.js';
 import { searchCommand } from './commands/search.js';
+import { vsearchCommand } from './commands/vsearch.js';
 import { listCommand } from './commands/list.js';
 import { forgetCommand } from './commands/forget.js';
 import { dimCommand, undimCommand } from './commands/dim.js';
@@ -17,16 +19,20 @@ import { realityCheckCommand } from './commands/reality-check.js';
 import { validateCommand } from './commands/validate.js';
 import { onboardCommand } from './commands/onboard.js';
 
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
+
 const program = new Command();
 
 program
   .name('hypermem')
   .description('Agentic memory framework CLI')
-  .version('0.3.1');
+  .version(version);
 
 // MEM commands
 program.addCommand(addCommand);
 program.addCommand(searchCommand);
+program.addCommand(vsearchCommand);
 program.addCommand(listCommand);
 program.addCommand(forgetCommand);
 program.addCommand(dimCommand);

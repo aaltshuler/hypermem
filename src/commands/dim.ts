@@ -15,7 +15,7 @@ Note: Dimmed memories are excluded from search/list by default.
   .action(async (id: string) => {
     try {
       const client = getHelixClient();
-      const updated = await updateMemStatus(client, id, 'DIMMED');
+      const updated = await updateMemStatus(client, id, 'dimmed');
       console.log(`Dimmed memory: ${updated.id}`);
       console.log(`  "${updated.statement.slice(0, 60)}${updated.statement.length > 60 ? '...' : ''}"`);
     } catch (error) {
@@ -32,7 +32,7 @@ Examples:
   .action(async (id: string) => {
     try {
       const client = getHelixClient();
-      const updated = await updateMemStatus(client, id, 'ACTIVE');
+      const updated = await updateMemStatus(client, id, 'active');
       console.log(`Restored memory: ${updated.id}`);
       console.log(`  "${updated.statement.slice(0, 60)}${updated.statement.length > 60 ? '...' : ''}"`);
     } catch (error) {

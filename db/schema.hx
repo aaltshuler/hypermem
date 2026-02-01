@@ -20,7 +20,7 @@ N::Mem {
     valid_to: Date,
     last_validated_at: Date,
     created_at: Date,
-    actors: String
+    reality_check: Boolean
 }
 
 // AGENT - AI agent instances
@@ -68,22 +68,25 @@ N::Reference {
 // ============================================
 
 // Mem relationships to entities
-E::About { From: Mem, To: Object, Properties: {} }
-E::InContext { From: Mem, To: Context, Properties: {} }
-E::ProposedByAgent { From: Mem, To: Agent, Properties: {} }
-E::VersionOf { From: Mem, To: Object, Properties: {} }
+E::About { From: Mem, To: Object, Properties: { timestamp: Date DEFAULT NOW } }
+E::AboutRef { From: Mem, To: Reference, Properties: { timestamp: Date DEFAULT NOW } }
+E::InContext { From: Mem, To: Context, Properties: { timestamp: Date DEFAULT NOW } }
+E::ProposedByAgent { From: Mem, To: Agent, Properties: { timestamp: Date DEFAULT NOW } }
+E::VersionOf { From: Mem, To: Object, Properties: { timestamp: Date DEFAULT NOW } }
+
+// Object relationships
+E::PartOf { From: Object, To: Context, Properties: { timestamp: Date DEFAULT NOW } }
 
 // Mem evidence links
-E::HasEvidence { From: Mem, To: Trace, Properties: {} }
-E::HasEvidenceRef { From: Mem, To: Reference, Properties: {} }
+E::HasEvidence { From: Mem, To: Trace, Properties: { timestamp: Date DEFAULT NOW } }
+E::HasEvidenceRef { From: Mem, To: Reference, Properties: { timestamp: Date DEFAULT NOW } }
 
 // Mem-to-Mem relationships
-E::Supersedes { From: Mem, To: Mem, Properties: { reason: String } }
-E::Contradicts { From: Mem, To: Mem, Properties: {} }
-E::DependsOn { From: Mem, To: Mem, Properties: {} }
-E::HasCause { From: Mem, To: Mem, Properties: {} }
-E::HasEffect { From: Mem, To: Mem, Properties: {} }
-E::Related { From: Mem, To: Mem, Properties: {} }
+E::Supersedes { From: Mem, To: Mem, Properties: { reason: String, timestamp: Date DEFAULT NOW } }
+E::Contradicts { From: Mem, To: Mem, Properties: { timestamp: Date DEFAULT NOW } }
+E::DependsOn { From: Mem, To: Mem, Properties: { timestamp: Date DEFAULT NOW } }
+E::Causal { From: Mem, To: Mem, Properties: { description: String, timestamp: Date DEFAULT NOW } }
+E::Related { From: Mem, To: Mem, Properties: { timestamp: Date DEFAULT NOW } }
 
 // ============================================
 // VECTOR STORES

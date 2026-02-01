@@ -12,10 +12,10 @@ const c = {
   state: chalk.yellow,
   status: (s: string) => {
     switch (s) {
-      case 'ACTIVE': return chalk.green(s);
-      case 'SUPERSEDED': return chalk.gray(s);
-      case 'CONTESTED': return chalk.red(s);
-      case 'DIMMED': return chalk.dim(s);
+      case 'active': return chalk.green(s);
+      case 'superseded': return chalk.gray(s);
+      case 'contested': return chalk.red(s);
+      case 'dimmed': return chalk.dim(s);
       default: return s;
     }
   },
@@ -39,7 +39,6 @@ export function formatMemSingle(mem: Mem, prefix = 'Added memory'): void {
   console.log(`  ${c.value(truncate(mem.statement, 200))}`);
   if (mem.title) console.log(`  ${c.label('title:')} ${c.title(mem.title)}`);
   if (mem.tags && mem.tags.length > 0) console.log(`  ${c.label('tags:')} ${mem.tags.join(', ')}`);
-  if (mem.actors && mem.actors.length > 0) console.log(`  ${c.label('actors:')} ${mem.actors.join(', ')}`);
   console.log(`  ${c.label('status:')} ${c.status(mem.status)}`);
 }
 
@@ -61,10 +60,25 @@ function formatMemListItem(mem: Mem): void {
 }
 
 export function formatMemSearchResult(mem: Mem, score: number, index: number): void {
-  console.log(`${c.index(`${index}.`)} ${c.type(`[${mem.mem_type}]`)} ${c.state(mem.mem_state)}${mem.confidence ? c.label(` (${mem.confidence})`) : ''} ${c.label('score:')} ${c.score(score.toFixed(3))}`);
+  const pct = Math.round(score * 100);
+  console.log(`${c.index(`${index}.`)} ${c.type(`[${mem.mem_type}]`)} ${c.state(mem.mem_state)}${mem.confidence ? c.label(` (${mem.confidence})`) : ''} ${c.label('|')} ${c.label('Score:')} ${c.score(`${pct}%`)}`);
   console.log(`   ${c.value(mem.statement)}`);
   if (mem.title) console.log(`   ${c.label('title:')} ${c.title(mem.title)}`);
   if (mem.notes) console.log(`   ${c.label('notes:')} ${truncate(mem.notes, 200)}`);
+  console.log(`   ${c.id(mem.id)} ${c.label('|')} ${c.status(mem.status)}`);
+  console.log();
+}
+
+function highlightMatch(text: string, query: string): string {
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, chalk.bgYellow.black('$1'));
+}
+
+export function formatMemTextSearchResult(mem: Mem, query: string, index: number): void {
+  console.log(`${c.index(`${index}.`)} ${c.type(`[${mem.mem_type}]`)} ${c.state(mem.mem_state)}${mem.confidence ? c.label(` (${mem.confidence})`) : ''} ${c.label('|')} ${c.label('Score:')} ${c.score('100%')}`);
+  console.log(`   ${highlightMatch(mem.statement, query)}`);
+  if (mem.title) console.log(`   ${c.label('title:')} ${highlightMatch(mem.title, query)}`);
+  if (mem.notes) console.log(`   ${c.label('notes:')} ${highlightMatch(truncate(mem.notes, 200), query)}`);
   console.log(`   ${c.id(mem.id)} ${c.label('|')} ${c.status(mem.status)}`);
   console.log();
 }

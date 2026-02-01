@@ -34,23 +34,23 @@ export const realityCheckCommand = new Command('reality-check')
     console.log('╰' + '─'.repeat(innerWidth) + '╯');
     console.log();
 
-    // Fetch rules (get all mems and filter - getMemsByType has single-result bug)
+    // Fetch mems with reality_check flag
     try {
       const client = getHelixClient();
       const allMems = await getAllMems(client);
-      const activeRules = allMems.filter(m => m.mem_type === 'Rule' && m.status === 'ACTIVE');
+      const realityCheckMems = allMems.filter(m => m.status === 'active' && m.reality_check === true);
 
-      if (activeRules.length === 0) {
-        console.log('RULES: (none)');
+      if (realityCheckMems.length === 0) {
+        console.log('Quick reminder: (none)');
       } else {
-        console.log('RULES:');
-        activeRules.forEach((rule, i) => {
-          console.log(`${i + 1}. ${rule.statement}`);
+        console.log('Quick reminder:');
+        realityCheckMems.forEach((mem, i) => {
+          console.log(`${i + 1}. ${mem.statement}`);
         });
       }
       console.log();
     } catch (error) {
-      console.log('RULES: (unable to fetch)');
+      console.log('Quick reminder: (unable to fetch)');
       console.log();
     }
   });

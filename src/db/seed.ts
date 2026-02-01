@@ -49,7 +49,7 @@ export async function seedDatabase(): Promise<void> {
       mem_state: m.mem_state,
       confidence: m.confidence,
       statement: m.statement,
-      status: 'ACTIVE',
+      status: 'active',
       title: m.title,
       tags: m.tags,
       notes: m.notes,

@@ -6,11 +6,14 @@ import {
   addMem,
   addMemEmbedding,
   linkAbout,
+  linkInContext,
   linkVersionOf,
+  linkPartOf,
   getObjectByName,
+  getContextByName,
 } from '../src/db/client.js';
 import { generateEmbedding } from '../src/ai/embed.js';
-import type { ContextType, ObjectType, MemType, MemState, ActorType } from '../src/types/index.js';
+import type { ContextType, ObjectType, MemType, MemState } from '../src/types/index.js';
 
 const client = getHelixClient();
 
@@ -19,8 +22,12 @@ const client = getHelixClient();
 // ============================================
 
 const contexts: { name: string; type: ContextType; description: string }[] = [
-  { name: 'ai-chat', type: 'Project', description: 'AI chat application with streaming responses' },
-  { name: 'task-dashboard', type: 'Project', description: 'Task management dashboard with real-time updates' },
+  // Projects
+  { name: 'ai-chat', type: 'project', description: 'AI chat application with streaming responses' },
+  { name: 'task-dashboard', type: 'project', description: 'Task management dashboard with real-time updates' },
+  // Domains
+  { name: 'reactDev', type: 'domain', description: 'React and frontend development ecosystem' },
+  { name: 'agentDev', type: 'domain', description: 'AI agent development and LLM integration' },
 ];
 
 // ============================================
@@ -29,49 +36,49 @@ const contexts: { name: string; type: ContextType; description: string }[] = [
 
 const objects: { name: string; type: ObjectType; description: string }[] = [
   // Languages (2)
-  { name: 'TypeScript', type: 'Language', description: 'Typed JavaScript superset' },
-  { name: 'Python', type: 'Language', description: 'General-purpose programming language' },
+  { name: 'TypeScript', type: 'language', description: 'Typed JavaScript superset' },
+  { name: 'Python', type: 'language', description: 'General-purpose programming language' },
 
   // Databases (5)
-  { name: 'MongoDB', type: 'Database', description: 'Document database with vector search' },
-  { name: 'HelixDB', type: 'Database', description: 'Graph-vector database' },
-  { name: 'Redis', type: 'Database', description: 'In-memory key-value store' },
-  { name: 'Supabase', type: 'Database', description: 'PostgreSQL hosting platform' },
-  { name: 'Neon', type: 'Database', description: 'Serverless PostgreSQL' },
+  { name: 'MongoDB', type: 'database', description: 'Document database with vector search' },
+  { name: 'HelixDB', type: 'database', description: 'Graph-vector database' },
+  { name: 'Redis', type: 'database', description: 'In-memory key-value store' },
+  { name: 'Supabase', type: 'database', description: 'PostgreSQL hosting platform' },
+  { name: 'Neon', type: 'database', description: 'Serverless PostgreSQL' },
 
   // Frameworks (4)
-  { name: 'Next.js', type: 'Framework', description: 'React meta-framework with SSR/SSG' },
-  { name: 'React', type: 'Framework', description: 'JavaScript UI library' },
-  { name: 'FastAPI', type: 'Framework', description: 'Python async web framework' },
-  { name: 'TailwindCSS', type: 'Framework', description: 'Utility-first CSS framework' },
+  { name: 'Next.js', type: 'framework', description: 'React meta-framework with SSR/SSG' },
+  { name: 'React', type: 'framework', description: 'JavaScript UI library' },
+  { name: 'FastAPI', type: 'framework', description: 'Python async web framework' },
+  { name: 'TailwindCSS', type: 'framework', description: 'Utility-first CSS framework' },
 
   // Libs (5)
-  { name: 'Zustand', type: 'Lib', description: 'Minimal React state management' },
-  { name: 'TanStack Query', type: 'Lib', description: 'Async state management for React' },
-  { name: 'shadcn/ui', type: 'Lib', description: 'Radix-based component collection' },
-  { name: 'Radix UI', type: 'Lib', description: 'Unstyled accessible UI primitives' },
-  { name: 'Framer Motion', type: 'Lib', description: 'React animation library' },
+  { name: 'Zustand', type: 'lib', description: 'Minimal React state management' },
+  { name: 'TanStack Query', type: 'lib', description: 'Async state management for React' },
+  { name: 'shadcn/ui', type: 'lib', description: 'Radix-based component collection' },
+  { name: 'Radix UI', type: 'lib', description: 'Unstyled accessible UI primitives' },
+  { name: 'Framer Motion', type: 'lib', description: 'React animation library' },
 
-  // Models (3)
-  { name: 'GPT', type: 'Model', description: 'OpenAI language model' },
-  { name: 'Claude Opus', type: 'Model', description: 'Anthropic flagship model' },
-  { name: 'Claude Sonnet', type: 'Model', description: 'Anthropic mid-tier model' },
+  // LLMs (3)
+  { name: 'GPT', type: 'llm', description: 'OpenAI language model' },
+  { name: 'Claude Opus', type: 'llm', description: 'Anthropic flagship model' },
+  { name: 'Claude Sonnet', type: 'llm', description: 'Anthropic mid-tier model' },
 
   // APIs (2)
-  { name: 'Vercel AI SDK', type: 'API', description: 'TypeScript SDK for AI applications' },
-  { name: 'Anthropic SDK', type: 'API', description: 'Official Claude API client' },
+  { name: 'Vercel AI SDK', type: 'api', description: 'TypeScript SDK for AI applications' },
+  { name: 'Anthropic SDK', type: 'api', description: 'Official Claude API client' },
 
   // Tools (5)
-  { name: 'npm', type: 'Tool', description: 'Node.js package manager' },
-  { name: 'pnpm', type: 'Tool', description: 'Fast disk-efficient package manager' },
-  { name: 'Docker', type: 'Tool', description: 'Container runtime' },
-  { name: 'Jest', type: 'Tool', description: 'JavaScript testing framework' },
-  { name: 'Playwright', type: 'Tool', description: 'Browser automation framework' },
+  { name: 'npm', type: 'tool', description: 'Node.js package manager' },
+  { name: 'pnpm', type: 'tool', description: 'Fast disk-efficient package manager' },
+  { name: 'Docker', type: 'tool', description: 'Container runtime' },
+  { name: 'Jest', type: 'tool', description: 'JavaScript testing framework' },
+  { name: 'Playwright', type: 'tool', description: 'Browser automation framework' },
 
   // Fonts (3)
-  { name: 'Geist Sans', type: 'Font', description: 'Vercel sans-serif typeface' },
-  { name: 'Geist Mono', type: 'Font', description: 'Vercel monospace typeface' },
-  { name: 'JetBrains Mono', type: 'Font', description: 'Developer-focused monospace' },
+  { name: 'Geist Sans', type: 'font', description: 'Vercel sans-serif typeface' },
+  { name: 'Geist Mono', type: 'font', description: 'Vercel monospace typeface' },
+  { name: 'JetBrains Mono', type: 'font', description: 'Developer-focused monospace' },
 ];
 
 // ============================================
@@ -84,65 +91,29 @@ interface MemData {
   state: MemState;
   title?: string;
   notes?: string;
-  actors: ActorType[];
-  linkTo?: string[];
+  linkTo?: string[]; // Object names to link via About
+  inContext?: string[]; // Context names to link via InContext
 }
 
 const mems: MemData[] = [
   // Rules (2)
-  { statement: 'Options first, implement after - ask before building', type: 'Rule', state: 'FACT', actors: ['human'] },
-  { statement: 'Do not change user text/content without permission', type: 'Rule', state: 'FACT', actors: ['human'] },
+  { statement: 'Options first, implement after - ask before building', type: 'rule', state: 'fact' },
+  { statement: 'Do not change user text/content without permission', type: 'rule', state: 'fact' },
 
-  // AntiPatterns (4)
-  { statement: 'Over-engineering solutions', type: 'AntiPattern', state: 'FACT', actors: ['human'] },
-  { statement: 'Using outdated approaches and libraries', type: 'AntiPattern', state: 'FACT', actors: ['human'] },
-  { statement: 'Adding unnecessary features', type: 'AntiPattern', state: 'FACT', actors: ['human'] },
-  { statement: 'Duct-tape solutions - poor implementation quality', type: 'AntiPattern', state: 'FACT', actors: ['human'] },
+  // BestPractices (2)
+  { statement: 'Use iterative approach: frequent review, feedback, fix cycle', type: 'bestPractice', state: 'fact' },
+  { statement: 'Use Zustand for React state management', type: 'bestPractice', state: 'fact', linkTo: ['Zustand', 'React'], inContext: ['ai-chat'] },
 
-  // BestPractices (4)
-  { statement: 'Use iterative approach: frequent review, feedback, fix cycle', type: 'BestPractice', state: 'FACT', actors: ['human'] },
-  { statement: 'Keep code modular: unbundle and simplify', type: 'BestPractice', state: 'FACT', actors: ['human'] },
-  { statement: 'For complex problems/refactoring - present options, never implement without approval', type: 'BestPractice', state: 'FACT', actors: ['human'] },
-  { statement: 'Use Zustand for React state management', type: 'BestPractice', state: 'FACT', actors: ['human'], linkTo: ['Zustand', 'React'] },
-
-  // Preferences (2)
-  {
-    statement: 'Prefers ASCII mockups to visualize UI before implementation',
-    type: 'Preference',
-    state: 'FACT',
-    title: 'UI Visualization',
-    notes: 'Wants to see the layout visually before any code is written. Reduces misunderstandings and rework.',
-    actors: ['human'],
-  },
-  {
-    statement: 'Prefers clean and minimalistic UI solutions over bloated ones',
-    type: 'Preference',
-    state: 'FACT',
-    title: 'Minimalist Design',
-    notes: 'Questions every addition. Less is more.',
-    actors: ['human'],
-  },
-
-  // Traits (2)
-  {
-    statement: 'Asks detailed questions to understand system state before acting',
-    type: 'Trait',
-    state: 'FACT',
-    title: 'Investigative',
-    notes: 'Needs full context before proceeding. Asks "which fields are mandatory?", "where do we get this data?".',
-    actors: ['human'],
-  },
+  // Traits (1)
   {
     statement: 'Cares deeply about correct terminology and precise meaning',
-    type: 'Trait',
-    state: 'FACT',
+    type: 'trait',
+    state: 'fact',
     title: 'Semantic Precision',
-    notes: 'Corrects conceptual misunderstandings immediately. Insists on proper naming.',
-    actors: ['human'],
   },
 ];
 
-// Version Mems (linked to Model objects)
+// Version Mems (linked to LLM objects)
 interface VersionMemData {
   title: string;
   statement: string;
@@ -152,6 +123,35 @@ interface VersionMemData {
 const versionMems: VersionMemData[] = [
   { title: '5.2 (gpt-5.2-2025-12-11)', statement: 'Latest version, stable', modelName: 'GPT' },
   { title: '4.5 (claude-opus-4-5-20251101)', statement: 'Current release', modelName: 'Claude Opus' },
+];
+
+// ============================================
+// PARTOF LINKS (Object -> Domain)
+// ============================================
+
+const partOfLinks: { object: string; domain: string }[] = [
+  // reactDev domain
+  { object: 'TypeScript', domain: 'reactDev' },
+  { object: 'React', domain: 'reactDev' },
+  { object: 'Next.js', domain: 'reactDev' },
+  { object: 'TailwindCSS', domain: 'reactDev' },
+  { object: 'Zustand', domain: 'reactDev' },
+  { object: 'TanStack Query', domain: 'reactDev' },
+  { object: 'shadcn/ui', domain: 'reactDev' },
+  { object: 'Radix UI', domain: 'reactDev' },
+  { object: 'Framer Motion', domain: 'reactDev' },
+  { object: 'Geist Sans', domain: 'reactDev' },
+  { object: 'Geist Mono', domain: 'reactDev' },
+  { object: 'npm', domain: 'reactDev' },
+  { object: 'pnpm', domain: 'reactDev' },
+  { object: 'Jest', domain: 'reactDev' },
+  { object: 'Playwright', domain: 'reactDev' },
+  // agentDev domain
+  { object: 'Vercel AI SDK', domain: 'agentDev' },
+  { object: 'Anthropic SDK', domain: 'agentDev' },
+  { object: 'GPT', domain: 'agentDev' },
+  { object: 'Claude Opus', domain: 'agentDev' },
+  { object: 'Claude Sonnet', domain: 'agentDev' },
 ];
 
 // ============================================
@@ -194,10 +194,9 @@ async function seedMems() {
       mem_type: mem.type,
       mem_state: mem.state,
       statement: mem.statement,
-      status: 'ACTIVE',
+      status: 'active',
       title: mem.title,
       notes: mem.notes,
-      actors: mem.actors,
       created_at: now,
     });
 
@@ -210,7 +209,17 @@ async function seedMems() {
         const obj = await getObjectByName(client, objName);
         if (obj) {
           await linkAbout(client, result.id, obj.id);
-          console.log(`    -> Linked to ${objName}`);
+          console.log(`    -> About: ${objName}`);
+        }
+      }
+    }
+
+    if (mem.inContext) {
+      for (const ctxName of mem.inContext) {
+        const ctx = await getContextByName(client, ctxName);
+        if (ctx) {
+          await linkInContext(client, result.id, ctx.id);
+          console.log(`    -> InContext: ${ctxName}`);
         }
       }
     }
@@ -225,23 +234,38 @@ async function seedVersionMems() {
     const embedding = await generateEmbedding(`${ver.title} ${ver.statement}`);
 
     const result = await addMem(client, {
-      mem_type: 'Version',
-      mem_state: 'FACT',
+      mem_type: 'version',
+      mem_state: 'fact',
       statement: ver.statement,
-      status: 'ACTIVE',
+      status: 'active',
       title: ver.title,
-      actors: ['human'],
       created_at: now,
     });
 
     await addMemEmbedding(client, result.id, result.status, now, embedding);
 
-    console.log(`  [Version] ${ver.title} -> ${result.id}`);
+    console.log(`  [version] ${ver.title} -> ${result.id}`);
 
     const model = await getObjectByName(client, ver.modelName);
     if (model) {
       await linkVersionOf(client, result.id, model.id);
       console.log(`    -> VersionOf ${ver.modelName}`);
+    }
+  }
+}
+
+async function seedPartOfLinks() {
+  console.log('\n=== Seeding PartOf Links ===');
+
+  for (const link of partOfLinks) {
+    const obj = await getObjectByName(client, link.object);
+    const ctx = await getContextByName(client, link.domain);
+
+    if (obj && ctx) {
+      await linkPartOf(client, obj.id, ctx.id);
+      console.log(`  ${link.object} -> PartOf -> ${link.domain}`);
+    } else {
+      console.log(`  [SKIP] ${link.object} -> ${link.domain} (not found)`);
     }
   }
 }
@@ -254,13 +278,15 @@ async function main() {
     await seedObjects();
     await seedMems();
     await seedVersionMems();
+    await seedPartOfLinks();
 
     console.log('\n=== Seed Complete ===');
     console.log(`  Contexts: ${contexts.length}`);
     console.log(`  Objects: ${objects.length}`);
     console.log(`  Mems: ${mems.length}`);
     console.log(`  Versions: ${versionMems.length}`);
-    console.log(`  Total: ${contexts.length + objects.length + mems.length + versionMems.length}`);
+    console.log(`  PartOf Links: ${partOfLinks.length}`);
+    console.log(`  Total nodes: ${contexts.length + objects.length + mems.length + versionMems.length}`);
   } catch (error) {
     console.error('Seed failed:', error);
     process.exit(1);

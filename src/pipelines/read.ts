@@ -55,7 +55,7 @@ export async function readPipeline(
       // Filter by specific status if provided
       if (status && mem.status !== status) continue;
       // Exclude DIMMED by default unless --all is set
-      if (!all && !status && mem.status === 'DIMMED') continue;
+      if (!all && !status && mem.status === 'dimmed') continue;
       results.push({
         mem,
         similarity: vr.similarity,
@@ -71,6 +71,36 @@ export async function readPipeline(
 
   logger.info({ count: reranked.length }, 'Search complete');
   return reranked;
+}
+
+export async function textSearchPipeline(
+  query: string,
+  options: SearchOptions = {}
+): Promise<Mem[]> {
+  const { limit = 10, status, all = false } = options;
+  const client = getHelixClient();
+
+  logger.info({ query }, 'Performing text search');
+  const allMems = await getAllMems(client);
+
+  const queryLower = query.toLowerCase();
+  let filtered = allMems.filter(m =>
+    m.statement.toLowerCase().includes(queryLower) ||
+    m.title?.toLowerCase().includes(queryLower) ||
+    m.notes?.toLowerCase().includes(queryLower)
+  );
+
+  // Filter by specific status if provided
+  if (status) {
+    filtered = filtered.filter(m => m.status === status);
+  } else if (!all) {
+    // Exclude DIMMED by default unless --all is set
+    filtered = filtered.filter(m => m.status !== 'dimmed');
+  }
+
+  const results = filtered.slice(0, limit);
+  logger.info({ count: results.length }, 'Text search complete');
+  return results;
 }
 
 export interface ListOptions {
@@ -97,7 +127,7 @@ export async function listPipeline(
     filtered = filtered.filter(m => m.status === status);
   } else if (!all) {
     // Exclude DIMMED by default unless --all is set
-    filtered = filtered.filter(m => m.status !== 'DIMMED');
+    filtered = filtered.filter(m => m.status !== 'dimmed');
   }
 
   logger.info({ count: filtered.length }, 'List complete');

@@ -5,17 +5,15 @@ import type { MemType, MemState, Confidence } from '../types/index.js';
 
 const ClassificationSchema = z.object({
   mem_type: z.enum([
-    'Decision',
-    'Problem',
-    'Rule',
-    'BestPractice',
-    'Convention',
-    'AntiPattern',
-    'Trait',
-    'Preference',
-    'Causal',
+    'decision',
+    'problem',
+    'rule',
+    'bestPractice',
+    'lexicon',
+    'trait',
+    'version',
   ]),
-  mem_state: z.enum(['FACT', 'ASSUMPTION']),
+  mem_state: z.enum(['fact', 'assumption']),
   confidence: z.enum(['low', 'med', 'high']).optional(),
   isMemoryWorthy: z.boolean(),
 });
@@ -36,26 +34,24 @@ export async function classifyMemory(content: string): Promise<ClassificationRes
 Content: "${content}"
 
 MEM Types:
-- Decision: A decision that was made (architectural, technical, process)
-- Problem: A known issue, bug, or challenge
-- Rule: A hard rule that must be followed
-- BestPractice: A recommended practice or approach
-- Convention: A coding or process convention
-- AntiPattern: A pattern to avoid
-- Trait: A personal characteristic or style
-- Preference: A preference or opinion
-- Causal: A cause-effect relationship
+- decision: A decision that was made (architectural, technical, process)
+- problem: A known issue, bug, or challenge
+- rule: A hard rule that must be followed (includes things to avoid)
+- bestpractice: A recommended practice or approach
+- lexicon: High-bandwidth shorthand - curated vocabulary where abbreviations expand to full meaning (e.g., "W" = width, "P" = padding)
+- trait: A personal characteristic or working style
+- version: A specific version of a library, framework, model, or tool
 
 MEM State:
-- FACT: Verified truth, in effect
-- ASSUMPTION: Not fully verified, needs confidence level
+- fact: Verified truth, in effect
+- assumption: Not fully verified, needs confidence level
 
-If ASSUMPTION, set confidence to low/med/high.
+If assumption, set confidence to low/med/high.
 
 Determine:
 1. The best MEM type
-2. Whether this is FACT or ASSUMPTION
-3. Confidence level (only if ASSUMPTION)
+2. Whether this is fact or assumption
+3. Confidence level (only if assumption)
 4. Whether this is memory-worthy (contains actionable, persistent info)`,
   });
 

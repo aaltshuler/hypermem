@@ -1,6 +1,6 @@
 // CONTEXT - Where memories apply
 
-export type ContextType = 'Org' | 'Project';
+export type ContextType = 'org' | 'project' | 'domain' | 'stage';
 
 export interface Context {
   id: string;

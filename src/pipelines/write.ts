@@ -7,7 +7,7 @@ import {
   type AddMemParams,
 } from '../db/client.js';
 import { MemInputSchema } from '../types/schemas.js';
-import type { Mem, MemType, MemState, Confidence, MemStatus, ActorType } from '../types/index.js';
+import type { Mem, MemType, MemState, Confidence, MemStatus } from '../types/index.js';
 import { logger } from '../utils/logger.js';
 
 export interface WritePipelineInput {
@@ -19,9 +19,9 @@ export interface WritePipelineInput {
   title?: string;
   tags?: string[];
   notes?: string;
-  actors?: ActorType[];
   valid_from?: string;
   valid_to?: string;
+  reality_check?: boolean;
 }
 
 export interface WritePipelineResult {
@@ -44,7 +44,7 @@ export async function writePipeline(
   if (input.mem_type) {
     // User provided type, skip classification
     mem_type = input.mem_type;
-    mem_state = input.mem_state || 'FACT';
+    mem_state = input.mem_state || 'fact';
     confidence = input.confidence;
     logger.info({ mem_type }, 'Using provided mem_type');
   } else {
@@ -72,11 +72,11 @@ export async function writePipeline(
     mem_state,
     confidence,
     statement: input.statement,
-    status: input.status || 'ACTIVE',
+    status: input.status || 'active',
     title: input.title,
     tags: input.tags,
     notes: input.notes,
-    actors: input.actors,
+    reality_check: input.reality_check,
   });
 
   // Generate embedding from statement + notes
@@ -98,9 +98,9 @@ export async function writePipeline(
     tags: validated.tags,
     notes: validated.notes,
     created_at: now,
-    actors: validated.actors,
     valid_from: input.valid_from,
     valid_to: input.valid_to,
+    reality_check: validated.reality_check,
   };
 
   const mem = await addMem(client, memParams);

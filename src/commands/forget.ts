@@ -11,7 +11,8 @@ Examples:
   $ hypermem forget abc123
   $ hypermem forget abc123 -f
 
-Note: This permanently removes the memory. Use 'dim' to hide without deleting.`)
+Note: This permanently removes the memory. Use 'dim' to hide without deleting.
+      Orphaned embeddings may remain (HelixDB limitation).`)
   .action(async (id: string, options) => {
     try {
       const confirmed = await confirmDelete('memory', id, options.force);

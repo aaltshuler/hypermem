@@ -6,16 +6,13 @@ import { formatMemList, formatNoneFound } from '../utils/format.js';
 
 // Aliases for common queries
 const ALIASES: Record<string, { type?: string; status?: string }> = {
-  decisions: { type: 'Decision', status: 'ACTIVE' },
-  problems: { type: 'Problem', status: 'ACTIVE' },
-  rules: { type: 'Rule', status: 'ACTIVE' },
-  bestpractices: { type: 'BestPractice', status: 'ACTIVE' },
-  conventions: { type: 'Convention', status: 'ACTIVE' },
-  antipatterns: { type: 'AntiPattern', status: 'ACTIVE' },
-  traits: { type: 'Trait', status: 'ACTIVE' },
-  preferences: { type: 'Preference', status: 'ACTIVE' },
-  causals: { type: 'Causal', status: 'ACTIVE' },
-  versions: { type: 'Version', status: 'ACTIVE' },
+  decisions: { type: 'decision', status: 'active' },
+  problems: { type: 'problem', status: 'active' },
+  rules: { type: 'rule', status: 'active' },
+  bestpractices: { type: 'bestPractice', status: 'active' },
+  lexicon: { type: 'lexicon', status: 'active' },
+  traits: { type: 'trait', status: 'active' },
+  versions: { type: 'version', status: 'active' },
 };
 
 export const listCommand = new Command('list')
@@ -28,13 +25,12 @@ export const listCommand = new Command('list')
   .addHelpText('after', `
 Aliases:
   decisions     problems      rules         bestpractices
-  conventions   antipatterns  traits        preferences
-  causals       versions
+  lexicon       traits        versions
 
 Examples:
   $ hypermem list                 # All ACTIVE memories
-  $ hypermem list traits          # Active Trait mems
   $ hypermem list rules           # Active Rule mems
+  $ hypermem list lexicon         # Active Lexicon mems
   $ hypermem list versions        # Active Version mems
   $ hypermem list --all           # Include all statuses`)
   .action(async (alias: string | undefined, options) => {
@@ -62,7 +58,7 @@ Examples:
 
       // Default to ACTIVE unless --all is set
       if (!options.all && !memStatus) {
-        memStatus = 'ACTIVE';
+        memStatus = 'active';
       }
 
       const mems = await listPipeline({
